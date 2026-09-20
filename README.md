@@ -107,3 +107,14 @@ Modifier ces trois valeurs suffit à rechanger toute l'interface.
 ```bash
 venv\Scripts\python.exe manage.py test parrainage
 ```
+
+
+## 🎬 Simuler l'événement
+
+Un guide pas-à-pas complet est disponible dans **[GUIDE_SIMULATION.md](GUIDE_SIMULATION.md)** :
+déroulé des 4 phases, points à vérifier, et commandes pour enchaîner les tests.
+
+```bash
+run.bat                                        # démarrer
+venv\Scripts\python.exe manage.py remettre_a_zero   # base propre entre deux simulations
+```
