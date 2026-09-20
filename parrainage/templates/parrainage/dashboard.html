@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Mon espace{% endblock %}
+
+{% block content %}
+
+<div class="entete-page d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div>
+        <h2>Bonjour {{ etudiant.prenom_usuel }} <span class="d-inline-block" style="animation: flotter 3s ease-in-out infinite;">👋</span></h2>
+        <p class="mb-0 small sous-titre">
+            {{ etudiant.get_niveau_display }}
+            {% if etudiant.groupe %}· {{ etudiant.groupe }}{% endif %}
+            · Identifiant : <strong>{{ etudiant.identifiant|default:"—" }}</strong>
+        </p>
+    </div>
+    <span class="badge badge-jaune fs-6 px-3 py-2">
+        {{ parametre_evenement.get_phase_actuelle_display }}
+    </span>
+</div>
+
+{# ============================ PHASE INSCRIPTION ============================ #}
+{% if phase == 'inscription' %}
+
+    {% if not etudiant.a_valide_questionnaire %}
+    <div class="carte carte-accent carte-halo p-4 mb-4 reveal">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h5 class="texte-marine mb-1">
+                    <i class="bi bi-clipboard-check"></i> Questionnaire à remplir
+                </h5>
+                <p class="texte-doux mb-0 small">
+                    Répondez aux 15 questions pour participer au parrainage.
+                    Attention : vos réponses ne pourront plus être modifiées ensuite.
+                </p>
+            </div>
+            <a href="{% url 'quiz' %}" class="btn btn-jaune">
+                <i class="bi bi-pencil-square"></i> Remplir le questionnaire
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="carte p-4 mb-4 reveal">
+        <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-check-circle-fill fs-2 pop" style="color: var(--vert);"></i>
+            <div>
+                <h5 class="texte-marine mb-1">Questionnaire enregistré</h5>
+                <p class="texte-doux mb-0 small">
+                    Vos réponses sont définitivement enregistrées. Vous êtes prêt.e pour la suite.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+{# ============================ PHASE VERROUILLAGE ============================ #}
+{% elif phase == 'verrouille' %}
+    <div class="carte p-5 text-center reveal">
+        <i class="bi bi-lock-fill display-4 texte-marine"></i>
+        <h4 class="texte-marine mt-3">Les inscriptions sont closes</h4>
+        <p class="texte-doux">
+            Les profils sont en cours de rapprochement. Rendez-vous le jour J
+            pour découvrir votre indice.
+        </p>
+        <a href="{% url 'mini_jeu' %}" class="btn btn-jaune">
+            <i class="bi bi-dice-5"></i> En attendant, jouons !
+        </a>
+    </div>
+
+{# ============================== PHASE TEASING ============================== #}
+{% elif phase == 'teasing' %}
+
+    {% if parametre_evenement.revelation_declenchee_manuellement %}
+        <div class="carte carte-accent p-5 text-center reveal">
+            <i class="bi bi-megaphone-fill display-4 texte-marine pop"></i>
+            <h4 class="texte-marine mt-3">C'est l'heure de la révélation !</h4>
+            <p class="texte-doux">Tous les binômes sont affichés à l'écran.</p>
+            <a href="{% url 'revelation' %}" class="btn btn-jaune btn-lg">
+                <i class="bi bi-stars"></i> Voir la révélation
+            </a>
+        </div>
+    {% else %}
+
+        <div class="carte carte-accent p-4 mb-4 text-center reveal">
+            <h5 class="texte-marine mb-1"><i class="bi bi-search"></i> Votre indice</h5>
+            <p class="texte-doux mb-0 small">
+                Les noms restent secrets pour l'instant. À vous de deviner…
+            </p>
+        </div>
+
+        {% if indices %}
+        <div class="row g-4 justify-content-center">
+            {% for entree in indices %}
+            {% if entree.indice %}
+            <div class="col-md-6 col-lg-5 reveal d{{ forloop.counter }}">
+                <div class="carte carte-accent carte-halo h-100 p-4 text-center">
+                    {% if indices|length > 1 %}
+                    <span class="badge badge-marine mb-3">
+                        <i class="bi bi-person"></i> Personne {{ forloop.counter }} sur {{ indices|length }}
+                    </span>
+                    {% endif %}
+                    <p class="texte-doux small mb-2">
+                        Vous avez un point commun fort sur cette question :
+                    </p>
+                    <p class="fst-italic texte-marine">«&nbsp;{{ entree.indice.2 }}&nbsp;»</p>
+                    <div class="score-anneau my-3" style="--pct: {{ entree.indice.1 }}0;">
+                        <span>{{ entree.indice.1 }}/5</span>
+                    </div>
+                    <span class="badge badge-jaune">Réponse commune</span>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        <p class="text-center texte-doux mt-4 mb-0 reveal">
+            Qui cela peut-il bien être… ? <i class="bi bi-question-circle"></i>
+        </p>
+        {% else %}
+        <div class="carte p-5 text-center reveal">
+            <p class="texte-doux mb-0">Les indices apparaîtront très bientôt.</p>
+        </div>
+        {% endif %}
+
+        <div class="carte p-4 mt-4 text-center reveal">
+            <h5 class="texte-marine mb-2"><i class="bi bi-dice-5"></i> En attendant la grande révélation…</h5>
+            <a href="{% url 'mini_jeu' %}" class="btn btn-marine">Le dé de la rencontre</a>
+        </div>
+    {% endif %}
+
+{# ============================ PHASE RÉVÉLATION ============================ #}
+{% elif phase == 'revelation' %}
+    {% if parametre_evenement.revelation_declenchee_manuellement %}
+    <div class="carte carte-accent carte-halo p-5 text-center reveal">
+        <i class="bi bi-stars display-4 texte-marine"></i>
+        <h4 class="texte-marine mt-3">La grande révélation</h4>
+        <p class="texte-doux">Tous les binômes de la promotion sont affichés.</p>
+        <a href="{% url 'revelation' %}" class="btn btn-jaune btn-lg">
+            <i class="bi bi-stars"></i> Voir le tableau complet
+        </a>
+    </div>
+    {% else %}
+    <div class="carte p-5 text-center reveal">
+        <i class="bi bi-hourglass-split display-4 texte-marine"></i>
+        <h5 class="texte-marine mt-3">Presque…</h5>
+        <p class="texte-doux mb-0">La révélation va être lancée par l'équipe.</p>
+    </div>
+    {% endif %}
+{% endif %}
+
+{# ============ MON BINÔME (L1) ou MES FILLEULS (L3), une fois révélé ============ #}
+{% if revelation_active and mes_matchs %}
+<div class="mt-4">
+    <h5 class="texte-marine mb-3">
+        {% if est_L1 %}<i class="bi bi-people-fill"></i> Votre parrain / marraine
+        {% else %}<i class="bi bi-people-fill"></i> Vos filleuls{% endif %}
+    </h5>
+    <div class="row g-3">
+        {% for m in mes_matchs %}
+        <div class="col-md-6 col-lg-4 reveal d{{ forloop.counter }}">
+            <div class="carte-binome carte-halo">
+                {% if est_L1 %}
+                    <div class="texte-doux small">Parrain / marraine</div>
+                    <h5 class="texte-marine mb-1">{{ m.l3.prenom }} {{ m.l3.nom }}</h5>
+                    <span class="badge badge-marine">{{ m.l3.groupe|default:m.l3.niveau }}</span>
+                {% else %}
+                    <div class="texte-doux small">Filleul / filleule</div>
+                    <h5 class="texte-marine mb-1">{{ m.l1.prenom }} {{ m.l1.nom }}</h5>
+                    <span class="badge badge-marine">{{ m.l1.groupe|default:m.l1.niveau }}</span>
+                {% endif %}
+                <div class="mt-3 pt-3" style="border-top: 1px solid var(--gris-bord);">
+                    <span class="texte-doux small">Compatibilité</span>
+                    <div class="score-gros">{{ m.score_affichage }}<span class="fs-5 texte-doux">/100</span></div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

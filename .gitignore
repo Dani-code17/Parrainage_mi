@@ -1,0 +1,50 @@
+# ---------------------------------------------------------------------------
+#  Fichiers exclus du dépôt
+# ---------------------------------------------------------------------------
+
+# Environnement virtuel
+venv/
+.venv/
+env/
+
+# Base de données locale
+db.sqlite3
+*.sqlite3
+*.sqlite3-journal
+
+# Identifiants des étudiants (contiennent les mots de passe en clair)
+identifiants*.csv
+!donnees/*.csv
+
+# Outils de l'éditeur / de l'agent
+.reasonix/
+reasonix.toml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# Variables d'environnement et secrets
+.env
+.env.*
+*.key
+*.pem
+secrets/
+
+# Fichiers générés
+*.log
+staticfiles/
+media/
+
+# Systèmes de fichiers
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Éditeurs
+.idea/
+.vscode/
+*.swp

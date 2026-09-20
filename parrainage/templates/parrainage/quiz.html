@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}Le questionnaire{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <div class="entete-page">
+            <h2>Le questionnaire de compatibilité</h2>
+            <p class="mb-0 sous-titre">
+                Répondez honnêtement : c'est ce qui permettra de vous rapprocher
+                de la personne qui vous correspond le mieux.
+            </p>
+        </div>
+
+        {% if verrouille %}
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle-fill"></i>
+            <strong>Vos réponses sont enregistrées.</strong>
+            Elles ne peuvent plus être modifiées. En cas d'erreur, contactez l'équipe.
+        </div>
+        {% elif phase_fermee %}
+        <div class="alert alert-warning">
+            <i class="bi bi-lock-fill"></i>
+            <strong>La période de réponse est terminée.</strong>
+            Les questionnaires ne sont plus modifiables.
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>À lire avant de commencer :</strong> une fois envoyées, vos réponses
+            <strong>ne pourront plus être modifiées</strong>.
+        </div>
+
+        {# Barre de progression : se remplit à mesure que l'on répond. #}
+        <div class="barre-progression">
+            <div class="d-flex align-items-center gap-2">
+                <span class="small fw-semibold texte-marine text-nowrap">
+                    <span data-repondu>0</span>/15
+                </span>
+                <div class="piste flex-grow-1">
+                    <div class="remplissage" data-remplissage></div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="carte mb-3 p-3">
+            <div class="d-flex justify-content-between flex-wrap gap-2 small texte-doux">
+                <span><strong class="texte-marine">1</strong> = Pas du tout</span>
+                <span><strong class="texte-marine">3</strong> = Neutre</span>
+                <span><strong class="texte-marine">5</strong> = Totalement</span>
+            </div>
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="carte">
+                <div class="p-4">
+                    {% for field in form %}
+                    <div class="mb-4 pb-3 question" style="{% if not forloop.last %}border-bottom: 1px solid var(--gris-bord);{% endif %}">
+                        <div class="d-flex gap-3">
+                            <div class="etape-num">{{ forloop.counter }}</div>
+                            <div class="flex-grow-1">
+                                <label class="mb-2" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                {% if lecture_seule %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-contour-marine">
+                        <i class="bi bi-arrow-left"></i> Retour à mon espace
+                    </a>
+                {% else %}
+                    <button type="submit" class="btn btn-jaune btn-lg px-5"
+                            onclick="return confirm('Confirmez-vous vos réponses ? Elles ne pourront plus être modifiées.');">
+                        <i class="bi bi-check2-circle"></i> Valider mes réponses
+                    </button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if not lecture_seule and not verrouille and not phase_fermee %}
+<script>
+    // Progression : nombre de questions déjà répondues.
+    (function () {
+        const champs = document.querySelectorAll('select.quiz-select, select[id^="id_q"]');
+        const compteur = document.querySelector('[data-repondu]');
+        const barre = document.querySelector('[data-remplissage]');
+        if (!champs.length || !compteur || !barre) return;
+
+        function maj() {
+            let faits = 0;
+            champs.forEach(c => { if (c.value) faits++; });
+            compteur.textContent = faits;
+            barre.style.width = (faits / champs.length * 100) + '%';
+        }
+        champs.forEach(c => c.addEventListener('change', maj));
+        maj();
+    })();
+
+    // Apparition en cascade des questions.
+    (function () {
+        document.querySelectorAll('.question').forEach((q, i) => {
+            q.classList.add('reveal');
+            q.style.transitionDelay = Math.min(i * 0.04, 0.5) + 's';
+        });
+        const obs = new IntersectionObserver((es) => {
+            es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+        }, { threshold: .1, rootMargin: '0px 0px -30px 0px' });
+        document.querySelectorAll('.question').forEach(q => obs.observe(q));
+    })();
+</script>
+{% endif %}
+{% endblock %}

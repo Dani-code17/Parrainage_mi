@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Inscription{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-5">
+        <div class="carte carte-accent carte-halo p-5 text-center reveal apparait">
+            <div class="avatar-initiales mb-3"><i class="bi bi-person-badge"></i></div>
+            <h4 class="texte-marine">Accès sur identifiant</h4>
+            <p class="texte-doux">
+                Les comptes sont créés par l'équipe d'organisation.
+                Votre identifiant et votre mot de passe vous ont été remis
+                personnellement.
+            </p>
+            <a href="{% url 'login' %}" class="btn btn-marine btn-lg">
+                <i class="bi bi-box-arrow-in-right"></i> Se connecter
+            </a>
+            <p class="texte-doux small mt-4 mb-0">
+                <i class="bi bi-info-circle"></i>
+                Vous n'avez pas reçu vos identifiants ? Contactez l'équipe d'organisation.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Votre indice{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <div class="entete-page text-center">
+            <h2><i class="bi bi-search"></i> Votre indice</h2>
+            <p class="mb-0 sous-titre">
+                Chut… les noms restent secrets pour l'instant.
+            </p>
+        </div>
+
+        {% if indices %}
+        <div class="row g-4 justify-content-center">
+            {% for entree in indices %}
+            {% if entree.indice %}
+            <div class="col-md-6 reveal d{{ forloop.counter }}">
+                <div class="carte carte-accent carte-halo h-100 p-4 text-center">
+                    {% if indices|length > 1 %}
+                    <span class="badge badge-marine mb-3">
+                        <i class="bi bi-person"></i> Personne {{ forloop.counter }} sur {{ indices|length }}
+                    </span>
+                    {% endif %}
+                    <i class="bi bi-quote fs-2 texte-marine"></i>
+                    <p class="texte-doux small mb-2 mt-2">
+                        Votre point commun le plus marquant :
+                    </p>
+                    <p class="fs-5 fst-italic texte-marine">«&nbsp;{{ entree.indice.2 }}&nbsp;»</p>
+
+                    <div class="score-anneau my-3" style="--pct: {{ entree.indice.1 }}0;">
+                        <span>{{ entree.indice.1 }}/5</span>
+                    </div>
+                    <span class="badge badge-jaune">Réponse commune</span>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="carte p-5 text-center reveal">
+            <i class="bi bi-hourglass display-4 texte-marine"></i>
+            <p class="texte-doux mb-0 mt-3">Pas encore d'indice disponible.</p>
+        </div>
+        {% endif %}
+
+        <div class="text-center mt-4 reveal d3">
+            <a href="{% url 'mini_jeu' %}" class="btn btn-marine">
+                <i class="bi bi-dice-5"></i> Le dé de la rencontre
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

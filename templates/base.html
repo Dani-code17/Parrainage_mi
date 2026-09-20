@@ -1,0 +1,778 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#12305c">
+    <title>{% block title %}Parrainage MIAGE{% endblock %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===================================================================
+           CHARTE — tout se règle ici.
+           Bleu marine · Jaune · Blanc. Modifiez uniquement ces variables
+           pour changer l'identité visuelle de l'établissement.
+           =================================================================== */
+        :root {
+            --marine:        #12305c;
+            --marine-fonce:  #0b1f3d;
+            --marine-clair:  #1d4a8c;
+            --jaune:         #ffc72c;
+            --jaune-clair:   #ffe08a;
+            --blanc:         #ffffff;
+            --gris-fond:     #f4f6fa;
+            --gris-bord:     #dfe4ee;
+            --texte:         #16203a;
+            --texte-doux:    #5d6b85;
+            --vert:          #1a8a4a;
+
+            --degrade-marine: linear-gradient(135deg, #12305c 0%, #1d4a8c 55%, #12305c 100%);
+            --degrade-jaune:  linear-gradient(135deg, #ffd75e 0%, #ffc72c 50%, #f0b800 100%);
+
+            --rayon:         .9rem;
+            --rayon-lg:      1.35rem;
+            --ombre:         0 2px 12px rgba(18, 48, 92, .07);
+            --ombre-carte:   0 6px 24px rgba(18, 48, 92, .10);
+            --ombre-forte:   0 16px 44px rgba(18, 48, 92, .20);
+
+            --ease:          cubic-bezier(.22, .61, .36, 1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--gris-fond);
+            color: var(--texte);
+            font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, h4, h5, .titre {
+            font-family: 'Sora', 'Inter', sans-serif;
+            letter-spacing: -.02em;
+            font-weight: 700;
+        }
+
+        /* Défilement personnalisé (discret) */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #e9edf5; }
+        ::-webkit-scrollbar-thumb {
+            background: var(--marine-clair);
+            border-radius: 10px;
+            border: 2px solid #e9edf5;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--marine); }
+
+        /* ================================================================
+           ANIMATIONS
+           ================================================================ */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(22px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        @keyframes flotter {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50%      { transform: translateY(-16px) rotate(6deg); }
+        }
+        @keyframes flotterLent {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50%      { transform: translateY(-26px) scale(1.06); }
+        }
+        @keyframes pulsation {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 199, 44, .55); }
+            50%      { transform: scale(1.04); box-shadow: 0 0 0 14px rgba(255, 199, 44, 0); }
+        }
+        @keyframes brillance {
+            0%   { background-position: -180% 0; }
+            100% { background-position: 180% 0; }
+        }
+        @keyframes pop {
+            0%   { transform: scale(.6); opacity: 0; }
+            60%  { transform: scale(1.12); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+        @keyframes apparaitre {
+            from { opacity: 0; transform: translateY(10px) scale(.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes balayage {
+            from { transform: translateX(-120%) skewX(-18deg); }
+            to   { transform: translateX(320%) skewX(-18deg); }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(26px);
+            transition: opacity .7s var(--ease), transform .7s var(--ease);
+            will-change: opacity, transform;
+        }
+        .reveal.visible { opacity: 1; transform: none; }
+
+        .pop { animation: pop .45s var(--ease) both; }
+        .apparait { animation: apparaitre .45s var(--ease) both; }
+
+        /* Délais en cascade */
+        .d1 { transition-delay: .08s; animation-delay: .08s; }
+        .d2 { transition-delay: .16s; animation-delay: .16s; }
+        .d3 { transition-delay: .24s; animation-delay: .24s; }
+        .d4 { transition-delay: .32s; animation-delay: .32s; }
+        .d5 { transition-delay: .40s; animation-delay: .40s; }
+        .d6 { transition-delay: .48s; animation-delay: .48s; }
+
+        /* ================================================================
+           BARRE HAUTE
+           ================================================================ */
+        .barre-haut {
+            background: rgba(18, 48, 92, .92);
+            backdrop-filter: blur(14px) saturate(140%);
+            -webkit-backdrop-filter: blur(14px) saturate(140%);
+            border-bottom: 3px solid var(--jaune);
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            transition: box-shadow .3s var(--ease), background .3s var(--ease);
+        }
+        .barre-haut.defilee {
+            box-shadow: 0 10px 30px rgba(11, 31, 61, .28);
+            background: rgba(11, 31, 61, .97);
+        }
+        .marque {
+            font-family: 'Sora', sans-serif;
+            font-weight: 800;
+            font-size: 1.12rem;
+            color: var(--blanc);
+            letter-spacing: -.01em;
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            text-decoration: none;
+        }
+        .marque:hover { color: var(--blanc); }
+        .marque .pastille {
+            background: var(--degrade-jaune);
+            color: var(--marine);
+            width: 2.2rem; height: 2.2rem;
+            border-radius: .7rem;
+            display: grid; place-items: center;
+            font-size: 1.15rem;
+            font-weight: 800;
+            box-shadow: 0 4px 14px rgba(255, 199, 44, .45);
+            transition: transform .35s var(--ease);
+        }
+        .marque:hover .pastille { transform: rotate(-8deg) scale(1.08); }
+        .marque .jaune { color: var(--jaune); }
+
+        .barre-haut .nav-link {
+            color: rgba(255, 255, 255, .84);
+            font-weight: 500;
+            padding: .48rem .85rem;
+            border-radius: .6rem;
+            position: relative;
+            transition: color .25s var(--ease), background .25s var(--ease);
+        }
+        .barre-haut .nav-link:hover,
+        .barre-haut .nav-link.actif {
+            color: var(--blanc);
+            background: rgba(255, 255, 255, .14);
+        }
+        .barre-haut .nav-link.actif::after {
+            content: '';
+            position: absolute;
+            left: .85rem; right: .85rem; bottom: .2rem;
+            height: 2px; border-radius: 2px;
+            background: var(--jaune);
+        }
+        .barre-haut .navbar-toggler { border-color: rgba(255, 255, 255, .35); }
+
+        /* ================================================================
+           CARTES
+           ================================================================ */
+        .carte {
+            background: var(--blanc);
+            border: 1px solid var(--gris-bord);
+            border-radius: var(--rayon);
+            box-shadow: var(--ombre);
+            overflow: hidden;
+            transition: transform .35s var(--ease), box-shadow .35s var(--ease),
+                        border-color .35s var(--ease);
+        }
+        .carte-hover:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--ombre-forte);
+            border-color: transparent;
+        }
+        .carte-entete {
+            background: var(--blanc);
+            border-bottom: 1px solid var(--gris-bord);
+            padding: 1rem 1.25rem;
+            font-weight: 700;
+            color: var(--marine);
+            font-family: 'Sora', sans-serif;
+        }
+        .carte-accent { border-top: 4px solid var(--jaune); }
+
+        /* Carte avec halo dégradé au survol */
+        .carte-halo { position: relative; }
+        .carte-halo::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: inherit;
+            background: var(--degrade-jaune);
+            opacity: 0;
+            z-index: -1;
+            filter: blur(14px);
+            transition: opacity .4s var(--ease);
+        }
+        .carte-halo:hover::before { opacity: .55; }
+
+        /* ================================================================
+           BOUTONS
+           ================================================================ */
+        .btn {
+            transition: transform .22s var(--ease), box-shadow .22s var(--ease),
+                        background .22s var(--ease), color .22s var(--ease);
+            font-weight: 600;
+        }
+        .btn:active { transform: translateY(1px) scale(.99); }
+
+        .btn-marine {
+            background: var(--marine);
+            border: 1px solid var(--marine);
+            color: var(--blanc);
+            overflow: hidden;
+            position: relative;
+        }
+        .btn-marine:hover, .btn-marine:focus {
+            background: var(--marine-fonce);
+            border-color: var(--marine-fonce);
+            color: var(--blanc);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(18, 48, 92, .30);
+        }
+
+        .btn-jaune {
+            background: var(--degrade-jaune);
+            border: 1px solid var(--jaune);
+            color: var(--marine);
+            font-weight: 700;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-jaune::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 40%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent);
+            transform: translateX(-120%) skewX(-18deg);
+            pointer-events: none;
+        }
+        .btn-jaune:hover::after { animation: balayage .8s var(--ease); }
+        .btn-jaune:hover, .btn-jaune:focus {
+            color: var(--marine);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px rgba(255, 199, 44, .48);
+        }
+
+        .btn-contour-marine {
+            background: transparent;
+            border: 1.5px solid var(--marine);
+            color: var(--marine);
+            font-weight: 600;
+        }
+        .btn-contour-marine:hover {
+            background: var(--marine);
+            color: var(--blanc);
+            transform: translateY(-2px);
+        }
+
+        /* ================================================================
+           FORMULAIRES
+           ================================================================ */
+        .form-control, .form-select {
+            border: 1.5px solid var(--gris-bord);
+            border-radius: .6rem;
+            padding: .65rem .85rem;
+            color: var(--texte);
+            transition: border-color .25s var(--ease), box-shadow .25s var(--ease),
+                        background .25s var(--ease);
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--marine-clair);
+            box-shadow: 0 0 0 .22rem rgba(29, 74, 140, .15);
+        }
+        .form-label, label { font-weight: 600; color: var(--marine); }
+        .form-select:disabled, .form-control:disabled {
+            background: #eef1f7;
+            color: var(--texte-doux);
+            cursor: not-allowed;
+        }
+
+        /* ================================================================
+           DIVERS
+           ================================================================ */
+        .texte-doux { color: var(--texte-doux); }
+        .texte-marine { color: var(--marine); }
+        .fond-marine { background: var(--degrade-marine); color: var(--blanc); }
+        .fond-jaune { background: var(--jaune-clair); }
+
+        .badge-marine { background: var(--marine); color: var(--blanc); }
+        .badge-jaune { background: var(--jaune); color: var(--marine); }
+        .badge-doux  { background: #e8ecf5; color: var(--texte-doux); }
+        .badge { font-weight: 600; letter-spacing: .01em; }
+
+        /* ---------------- En-tête de page (hero compact) ---------------- */
+        .entete-page {
+            position: relative;
+            background: var(--degrade-marine);
+            background-size: 200% 200%;
+            color: var(--blanc);
+            border-radius: var(--rayon-lg);
+            padding: 2rem 1.9rem;
+            margin-bottom: 1.6rem;
+            border-bottom: 4px solid var(--jaune);
+            overflow: hidden;
+            box-shadow: var(--ombre-carte);
+            animation: fadeUp .6s var(--ease) both, brillance 9s linear infinite;
+        }
+        .entete-page h1, .entete-page h2 { font-weight: 800; margin: 0; }
+        .entete-page .sous-titre { color: rgba(255, 255, 255, .86); }
+        /* Halos décoratifs */
+        .entete-page::before,
+        .entete-page::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .entete-page::before {
+            width: 230px; height: 230px;
+            right: -70px; top: -90px;
+            background: radial-gradient(circle, rgba(255, 199, 44, .34), transparent 68%);
+            animation: flotterLent 11s ease-in-out infinite;
+        }
+        .entete-page::after {
+            width: 170px; height: 170px;
+            left: -60px; bottom: -80px;
+            background: radial-gradient(circle, rgba(255, 255, 255, .16), transparent 70%);
+            animation: flotterLent 14s ease-in-out infinite reverse;
+        }
+        .entete-page > * { position: relative; z-index: 1; }
+
+        /* ---------------- Hero d'accueil ---------------- */
+        .hero {
+            position: relative;
+            background: var(--degrade-marine);
+            border-radius: var(--rayon-lg);
+            color: var(--blanc);
+            padding: 3.4rem 2rem;
+            overflow: hidden;
+            border-bottom: 5px solid var(--jaune);
+            box-shadow: var(--ombre-forte);
+            margin-bottom: 1.8rem;
+        }
+        .hero h1 { font-size: clamp(1.9rem, 4.4vw, 3.1rem); font-weight: 800; }
+        .hero .orbite {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(2px);
+        }
+        .hero .o1 {
+            width: 260px; height: 260px; right: -60px; top: -80px;
+            background: radial-gradient(circle, rgba(255, 199, 44, .38), transparent 70%);
+            animation: flotter 9s ease-in-out infinite;
+        }
+        .hero .o2 {
+            width: 200px; height: 200px; left: -70px; bottom: -70px;
+            background: radial-gradient(circle, rgba(255, 255, 255, .20), transparent 70%);
+            animation: flotterLent 12s ease-in-out infinite;
+        }
+        .hero .o3 {
+            width: 130px; height: 130px; right: 22%; bottom: 12%;
+            background: radial-gradient(circle, rgba(29, 74, 140, .55), transparent 70%);
+            animation: flotter 13s ease-in-out infinite reverse;
+        }
+        .hero > * { position: relative; z-index: 1; }
+        .hero .etiquette {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            background: rgba(255, 199, 44, .16);
+            border: 1px solid rgba(255, 199, 44, .45);
+            color: var(--jaune);
+            border-radius: 999px;
+            padding: .35rem .9rem;
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        /* ---------------- Compteurs ---------------- */
+        .compteur {
+            background: var(--blanc);
+            border: 1px solid var(--gris-bord);
+            border-top: 4px solid var(--jaune);
+            border-radius: var(--rayon);
+            padding: 1rem .5rem;
+            text-align: center;
+            transition: transform .3s var(--ease), box-shadow .3s var(--ease);
+        }
+        .compteur:hover { transform: translateY(-4px); box-shadow: var(--ombre-carte); }
+        .compteur-valeur {
+            font-family: 'Sora', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--marine);
+            line-height: 1.1;
+            font-variant-numeric: tabular-nums;
+        }
+        .compteur-valeur.change { animation: pop .4s var(--ease); }
+        .compteur-label {
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .09em;
+            color: var(--texte-doux);
+            font-weight: 600;
+        }
+
+        /* ---------------- Scores ---------------- */
+        .score-gros {
+            font-family: 'Sora', sans-serif;
+            font-size: 2.7rem;
+            font-weight: 800;
+            color: var(--marine);
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+        .score-anneau {
+            --pct: 0;
+            width: 108px; height: 108px;
+            border-radius: 50%;
+            display: grid; place-items: center;
+            margin: 0 auto;
+            background:
+                conic-gradient(var(--jaune) calc(var(--pct) * 1%), #e6eaf3 0);
+            position: relative;
+            animation: pop .6s var(--ease) both;
+        }
+        .score-anneau::after {
+            content: '';
+            position: absolute;
+            inset: 9px;
+            border-radius: 50%;
+            background: var(--blanc);
+        }
+        .score-anneau > span {
+            position: relative;
+            z-index: 1;
+            font-family: 'Sora', sans-serif;
+            font-weight: 800;
+            color: var(--marine);
+            font-size: 1.5rem;
+        }
+
+        .carte-binome {
+            border: 1px solid var(--gris-bord);
+            border-radius: var(--rayon);
+            background: var(--blanc);
+            padding: 1.15rem;
+            height: 100%;
+            transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+        }
+        .carte-binome:hover {
+            transform: translateY(-6px) scale(1.015);
+            box-shadow: var(--ombre-forte);
+        }
+
+        /* ---------------- Étapes ---------------- */
+        .etape { display: flex; gap: .9rem; align-items: flex-start; }
+        .etape-num {
+            flex: 0 0 2rem; height: 2rem;
+            border-radius: 50%;
+            background: var(--degrade-jaune);
+            color: var(--marine);
+            display: grid; place-items: center;
+            font-weight: 800;
+            box-shadow: 0 3px 10px rgba(255, 199, 44, .4);
+        }
+
+        /* ---------------- Accueil : carte parrain ---------------- */
+        .avatar-initiales {
+            width: 76px; height: 76px;
+            border-radius: 50%;
+            background: var(--degrade-marine);
+            color: var(--blanc);
+            display: grid; place-items: center;
+            font-family: 'Sora', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            margin: 0 auto;
+            border: 3px solid var(--jaune);
+            box-shadow: 0 8px 22px rgba(18, 48, 92, .28);
+            transition: transform .4s var(--ease);
+        }
+        .avatar-initiales:hover { transform: scale(1.07) rotate(-4deg); }
+
+        /* ---------------- Révélation ---------------- */
+        .carte-parrain {
+            animation: fadeUp .6s var(--ease) both;
+        }
+        .ligne-filleul {
+            border-radius: .6rem;
+            padding: .6rem .65rem;
+            transition: background .25s var(--ease), transform .25s var(--ease);
+        }
+        .ligne-filleul:hover {
+            background: #f7f9fd;
+            transform: translateX(4px);
+        }
+
+        /* ---------------- Barre de progression (quiz) ---------------- */
+        .barre-progression {
+            position: sticky;
+            top: 74px;
+            z-index: 1020;
+            background: var(--blanc);
+            border: 1px solid var(--gris-bord);
+            border-radius: 999px;
+            padding: .4rem .6rem;
+            box-shadow: var(--ombre);
+            margin-bottom: 1.2rem;
+        }
+        .barre-progression .piste {
+            height: 8px;
+            background: #e9edf5;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .barre-progression .remplissage {
+            height: 100%;
+            width: 0%;
+            border-radius: 999px;
+            background: var(--degrade-jaune);
+            transition: width .45s var(--ease);
+        }
+
+        /* ---------------- Alertes ---------------- */
+        .alert {
+            border-radius: var(--rayon);
+            border-width: 1px;
+            animation: fadeUp .5s var(--ease) both;
+        }
+        .list-group-item { border-color: var(--gris-bord); }
+
+        /* ---------------- Pied de page ---------------- */
+        .pied {
+            background: var(--marine-fonce);
+            color: rgba(255, 255, 255, .72);
+            padding: 1.6rem 0;
+            margin-top: auto;
+            border-top: 4px solid var(--jaune);
+        }
+        .pied a { color: var(--jaune); text-decoration: none; }
+
+        /* ---------------- Préférences : animations réduites ---------------- */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .001ms !important;
+            }
+            .reveal { opacity: 1; transform: none; }
+        }
+
+        @media print {
+            .barre-haut, .pied, .no-print { display: none !important; }
+            body { background: #fff; }
+            .entete-page, .hero { box-shadow: none; }
+        }
+
+        /* ================================================================
+           RÉVÉLATION — séquence de dévoilement
+           ================================================================ */
+        /* Rideau d'ouverture */
+        #rideau {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: var(--degrade-marine);
+            display: grid;
+            place-items: center;
+            text-align: center;
+            color: var(--blanc);
+            transition: opacity .8s var(--ease), visibility .8s var(--ease);
+        }
+        #rideau.ouvert { opacity: 0; visibility: hidden; }
+        #rideau .compte {
+            font-family: 'Sora', sans-serif;
+            font-size: clamp(4rem, 16vw, 9rem);
+            font-weight: 800;
+            color: var(--jaune);
+            line-height: 1;
+            animation: pop .5s var(--ease) both;
+        }
+        #rideau .intro { color: rgba(255,255,255,.85); letter-spacing: .18em; text-transform: uppercase; font-size: .8rem; }
+
+        /* Dévoilement progressif des cartes */
+        .carte-parrain {
+            opacity: 0;
+            transform: translateY(40px) scale(.94);
+            transition: opacity .75s var(--ease), transform .75s var(--ease);
+        }
+        .carte-parrain.voile { opacity: 1; transform: none; }
+
+        /* Éclat doré au moment où la carte apparaît */
+        .carte-parrain.voile .entete-parrain { position: relative; overflow: hidden; }
+        .carte-parrain.voile .entete-parrain::after {
+            content: '';
+            position: absolute; top: 0; left: 0;
+            width: 45%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+            transform: translateX(-140%) skewX(-18deg);
+            animation: balayage 1.1s var(--ease) .25s;
+            pointer-events: none;
+        }
+
+        /* Célébration : confettis */
+        .confetti {
+            position: fixed;
+            width: 10px; height: 14px;
+            top: -20px;
+            z-index: 1900;
+            pointer-events: none;
+            opacity: .95;
+        }
+        @keyframes tomber {
+            0%   { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+        }
+    </style>
+    {% block styles %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg barre-haut py-2" id="barreHaut">
+    <div class="container">
+        <a class="marque" href="{% url 'home' %}">
+            <span class="pastille">P</span>
+            <span>Parrainage <span class="jaune">MIAGE</span></span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#nav" aria-label="Menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+            <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+                {% if user.is_authenticated %}
+                    {% if phase_actuelle == 'teasing' or phase_actuelle == 'revelation' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'mini-jeu' in request.path %}actif{% endif %}"
+                           href="{% url 'mini_jeu' %}">
+                            <i class="bi bi-dice-5"></i> Le dé
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/dashboard/' in request.path %}actif{% endif %}"
+                           href="{% url 'dashboard' %}">
+                            <i class="bi bi-person-circle"></i> Mon espace
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <form method="post" action="{% url 'logout' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button class="btn btn-jaune btn-sm px-3" type="submit">
+                                Déconnexion
+                            </button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">
+                            <i class="bi bi-box-arrow-in-right"></i> Connexion
+                        </a>
+                    </li>
+                {% endif %}
+                {% if user.is_superuser %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'admin:index' %}">
+                            <i class="bi bi-gear"></i> Administration
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container py-4 flex-grow-1">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="pied">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <small>Parrainage MIAGE — L1 × L3 · Année 2026-2027</small>
+        <small style="color: rgba(255,255,255,.55);">Les binômes sont dévoilés le jour de la révélation.</small>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    /* --- Ombre de la barre haute au défilement --- */
+    (function () {
+        const barre = document.getElementById('barreHaut');
+        if (!barre) return;
+        const majBarre = () => barre.classList.toggle('defilee', window.scrollY > 8);
+        majBarre();
+        window.addEventListener('scroll', majBarre, { passive: true });
+    })();
+
+    /* --- Apparition progressive des blocs .reveal --- */
+    (function () {
+        const cibles = document.querySelectorAll('.reveal');
+        if (!cibles.length) return;
+        if (!('IntersectionObserver' in window)) {
+            cibles.forEach(el => el.classList.add('visible'));
+            return;
+        }
+        const observateur = new IntersectionObserver((entrees) => {
+            entrees.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    observateur.unobserve(e.target);
+                }
+            });
+        }, { threshold: .12, rootMargin: '0px 0px -40px 0px' });
+        cibles.forEach(el => observateur.observe(el));
+    })();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

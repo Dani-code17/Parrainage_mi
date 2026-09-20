@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}Connexion{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="carte carte-accent carte-halo reveal apparait">
+            <div class="p-4 text-center fond-marine">
+                <div class="avatar-initiales mb-3" style="background: rgba(255,255,255,.14); border-color: var(--jaune);">
+                    <i class="bi bi-person-badge"></i>
+                </div>
+                <h4 class="text-white mb-0">Connexion</h4>
+            </div>
+
+            <div class="p-4">
+                <p class="texte-doux small text-center mb-4">
+                    Saisissez l'identifiant remis par l'équipe.
+                </p>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-marine w-100 mt-3 py-2">
+                        <i class="bi bi-box-arrow-in-right"></i> Se connecter
+                    </button>
+                </form>
+            </div>
+
+            <div class="p-3 text-center" style="background: var(--gris-fond); border-top: 1px solid var(--gris-bord);">
+                <small class="texte-doux">
+                    <i class="bi bi-info-circle"></i>
+                    Identifiant perdu ? Contactez l'équipe d'organisation.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

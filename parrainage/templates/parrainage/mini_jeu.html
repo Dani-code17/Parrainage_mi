@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Le dé de la rencontre{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <div class="carte carte-accent carte-halo reveal apparait">
+            <div class="p-4 text-center fond-marine">
+                <i class="bi bi-dice-5 fs-1" style="color: var(--jaune);"></i>
+                <h4 class="text-white mt-2 mb-0">Le dé de la rencontre</h4>
+            </div>
+
+            <div class="p-5 text-center">
+                <div id="resultat" style="min-height: 190px;" class="d-flex flex-column justify-content-center align-items-center">
+                    <i class="bi bi-dice-1 display-1 texte-marine opacity-25" id="de-fixe"
+                       style="transition: transform .2s;"></i>
+                    <p class="texte-doux mt-3 mb-0" id="message-attente">
+                        Lancez le dé pour découvrir un signe du destin…
+                    </p>
+                </div>
+
+                <button id="btn-lancer" class="btn btn-jaune btn-lg px-5 mt-3">
+                    <i class="bi bi-dice-5"></i> Lancer le dé
+                </button>
+            </div>
+
+            <div class="p-3 text-center" style="background: var(--gris-fond); border-top: 1px solid var(--gris-bord);">
+                <small class="texte-doux">
+                    <i class="bi bi-info-circle"></i>
+                    Simple divertissement — sans effet sur les scores de compatibilité.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const messages = [
+        {face: 1, emoji: "🤭", texte: "Ton match est en train de relire tes réponses… il sourit."},
+        {face: 2, emoji: "✨", texte: "Les étoiles s'alignent. Prépare-toi pour une belle rencontre."},
+        {face: 3, emoji: "🎤", texte: "Petit conseil : regarde du côté des fans de karaoké."},
+        {face: 4, emoji: "🌬️", texte: "La compatibilité est dans l'air. Respire."},
+        {face: 5, emoji: "🎯", texte: "Ton parrain ou marraine est AUSSI en train de jouer à ce dé !"},
+        {face: 6, emoji: "⚡", texte: "COUP DE FOUDRE MAGNÉTIQUE. C'est sûr, vous allez vous entendre."},
+    ];
+
+    const bouton = document.getElementById('btn-lancer');
+    const zone = document.getElementById('resultat');
+    const fixe = document.getElementById('de-fixe');
+
+    bouton.addEventListener('click', () => {
+        const message = messages[Math.floor(Math.random() * messages.length)];
+
+        bouton.disabled = true;
+        bouton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Ça tourne…';
+
+        let tours = 0;
+        const roulement = setInterval(() => {
+            const face = 1 + Math.floor(Math.random() * 6);
+            fixe.className = 'bi bi-dice-' + face + ' display-1 texte-marine';
+            // Le dé "tremble" pendant le roulement.
+            fixe.style.transform = `rotate(${(Math.random() * 30 - 15).toFixed(1)}deg) scale(${1 + Math.random() * 0.12})`;
+            tours++;
+
+            if (tours > 10) {
+                clearInterval(roulement);
+                fixe.style.transform = 'rotate(0deg) scale(1)';
+                zone.innerHTML = `
+                    <div class="display-2 pop">${message.emoji}</div>
+                    <div class="score-gros my-2 pop" style="animation-delay:.08s">${message.face}</div>
+                    <p class="fs-5 texte-marine mt-2 mb-0 apparait" style="animation-delay:.16s">
+                        ${message.texte}
+                    </p>
+                `;
+                bouton.disabled = false;
+                bouton.innerHTML = '<i class="bi bi-arrow-repeat"></i> Relancer le dé';
+            }
+        }, 75);
+    });
+</script>
+{% endblock %}

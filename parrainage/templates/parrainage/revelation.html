@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}La révélation{% endblock %}
+
+{% block content %}
+
+{# ---------- Rideau d'ouverture : compte à rebours 3-2-1 ---------- #}
+<div id="rideau" class="no-print">
+    <div>
+        <div class="intro mb-3">Parrainage MIAGE · Révélation</div>
+        <div class="compte" id="compte">3</div>
+        <p class="mt-4 mb-0" style="color: rgba(255,255,255,.8);">Préparez-vous…</p>
+        <button id="passer" class="btn btn-contour-marine text-white border-white mt-4 btn-sm"
+                style="border-color: rgba(255,255,255,.45);">
+            Passer l'introduction
+        </button>
+    </div>
+</div>
+
+<div class="hero text-center">
+    <span class="orbite o1"></span>
+    <span class="orbite o2"></span>
+    <span class="orbite o3"></span>
+
+    <span class="etiquette pop mb-3"><i class="bi bi-stars"></i> Le grand jour</span>
+    <h1 class="display-5 mb-2">La grande révélation</h1>
+    <p class="mb-0" style="color: rgba(255,255,255,.88);">
+        {{ stats.l1_places }} binôme{{ stats.l1_places|pluralize }} formé{{ stats.l1_places|pluralize }} cette année.
+    </p>
+</div>
+
+<div class="row g-3 mb-4 no-print">
+    <div class="col-6 col-md-3">
+        <div class="compteur">
+            <div class="compteur-valeur" data-compter="{{ stats.l1_places }}">0</div>
+            <div class="compteur-label">Binômes</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="compteur">
+            <div class="compteur-valeur" data-compter="{{ stats.l3_avec_filleuls }}">0</div>
+            <div class="compteur-label">Parrains / marraines</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="compteur">
+            <div class="compteur-valeur" data-compter="{{ stats.l1_eligibles }}">0</div>
+            <div class="compteur-label">Filleuls</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="compteur">
+            <div class="compteur-valeur" data-compter="{{ stats.capacite }}">0</div>
+            <div class="compteur-label">Filleuls max / L3</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4" id="grille">
+    {% for groupe in groupes %}
+    <div class="col-md-6 col-lg-4">
+        <div class="carte carte-hover h-100 carte-accent carte-parrain">
+            <div class="p-4 text-center fond-marine entete-parrain">
+                <div class="small mb-1" style="color: var(--jaune); font-weight: 700; letter-spacing: .06em;">
+                    PARRAIN / MARRAINE · {{ groupe.l3.groupe|default:groupe.l3.niveau }}
+                </div>
+                <h4 class="text-white mb-0 mt-1">{{ groupe.l3.prenom }} {{ groupe.l3.nom }}</h4>
+                <div class="mt-2 small" style="color: rgba(255,255,255,.75);">
+                    Accompagne {{ groupe.nb_filleuls }} filleul{{ groupe.nb_filleuls|pluralize }}
+                </div>
+            </div>
+
+            <div class="p-3">
+                {% for f in groupe.filleuls %}
+                <div class="ligne-filleul d-flex justify-content-between align-items-center"
+                     style="{% if not forloop.last %}border-bottom: 1px solid var(--gris-bord);{% endif %}">
+                    <div>
+                        <div class="fw-semibold texte-marine">
+                            {{ f.l1.prenom }} {{ f.l1.nom }}
+                        </div>
+                        <span class="badge badge-doux">{{ f.l1.groupe|default:f.l1.niveau }}</span>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold" style="color: var(--marine); font-size: 1.35rem; font-family: 'Sora', sans-serif;">
+                            {{ f.score }}<span class="small texte-doux">/100</span>
+                        </div>
+                        <div class="texte-doux" style="font-size: .7rem;">compatibilité</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="px-3 pb-3">
+                <div class="d-flex justify-content-between small texte-doux pt-2"
+                     style="border-top: 1px solid var(--gris-bord);">
+                    <span>Score moyen</span>
+                    <strong class="texte-marine">{{ groupe.score_moyen }}/100</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="carte p-5 text-center">
+            <p class="texte-doux mb-0">Aucun binôme à afficher pour le moment.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if groupes %}
+<div class="text-center mt-4 no-print">
+    <button id="rejouer" class="btn btn-contour-marine">
+        <i class="bi bi-arrow-repeat"></i> Rejouer l'animation
+    </button>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if groupes %}
+<script>
+    /* =====================================================================
+       Séquence de révélation
+       1. un rideau avec un compte à rebours 3-2-1
+       2. les cartes apparaissent une par une
+       3. des confettis célèbrent l'ensemble
+       Un bouton « Passer » et le respect de « animations réduites »
+       permettent de tout afficher immédiatement.
+       ===================================================================== */
+    (function () {
+        const rideau    = document.getElementById('rideau');
+        const compte    = document.getElementById('compte');
+        const passer    = document.getElementById('passer');
+        const rejouer   = document.getElementById('rejouer');
+        const cartes    = Array.from(document.querySelectorAll('.carte-parrain'));
+        const compteurs = Array.from(document.querySelectorAll('[data-compter]'));
+        const sansAnimation = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        let minuteries = [];
+
+        function viderMinuteries() {
+            minuteries.forEach(clearTimeout);
+            minuteries = [];
+        }
+
+        /* --- Confettis --- */
+        function confettis(nombre) {
+            if (sansAnimation) return;
+            const couleurs = ['#ffc72c', '#ffffff', '#1d4a8c', '#ffe08a'];
+            for (let i = 0; i < nombre; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.background = couleurs[Math.floor(Math.random() * couleurs.length)];
+                c.style.animation = `tomber ${2.4 + Math.random() * 1.8}s linear ${Math.random() * 0.5}s forwards`;
+                if (Math.random() > .5) c.style.borderRadius = '50%';
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 4800);
+            }
+        }
+
+        /* --- Compteurs qui s'incrémentent --- */
+        function animerCompteurs() {
+            compteurs.forEach(el => {
+                const cible = parseInt(el.dataset.compter, 10) || 0;
+                if (sansAnimation || cible === 0) { el.textContent = cible; return; }
+                let valeur = 0;
+                const pas = Math.max(1, Math.ceil(cible / 40));
+                const tic = setInterval(() => {
+                    valeur = Math.min(cible, valeur + pas);
+                    el.textContent = valeur;
+                    if (valeur >= cible) clearInterval(tic);
+                }, 28);
+                minuteries.push(tic);
+            });
+        }
+
+        /* --- Dévoilement des cartes --- */
+        function revelerCartes() {
+            cartes.forEach((carte, i) => {
+                const t = setTimeout(() => {
+                    carte.classList.add('voile');
+                    if (i % 3 === 2) confettis(24);   // une salve toutes les 3 cartes
+                }, sansAnimation ? 0 : i * 260);
+                minuteries.push(t);
+            });
+            const fin = setTimeout(() => {
+                confettis(140);
+                animerCompteurs();
+            }, sansAnimation ? 0 : cartes.length * 260 + 350);
+            minuteries.push(fin);
+        }
+
+        /* --- Séquence complète --- */
+        function lancer() {
+            viderMinuteries();
+            cartes.forEach(c => c.classList.remove('voile'));
+            compteurs.forEach(el => el.textContent = '0');
+
+            if (sansAnimation) {
+                rideau.classList.add('ouvert');
+                cartes.forEach(c => c.classList.add('voile'));
+                animerCompteurs();
+                return;
+            }
+
+            rideau.classList.remove('ouvert');
+            let n = 3;
+            compte.textContent = n;
+            compte.style.animation = 'none';
+            void compte.offsetWidth;
+            compte.style.animation = 'pop .5s cubic-bezier(.22,.61,.36,1) both';
+
+            const decompte = setInterval(() => {
+                n--;
+                if (n > 0) {
+                    compte.textContent = n;
+                    compte.style.animation = 'none';
+                    void compte.offsetWidth;
+                    compte.style.animation = 'pop .5s cubic-bezier(.22,.61,.36,1) both';
+                } else {
+                    clearInterval(decompte);
+                    compte.textContent = '🎉';
+                    const t = setTimeout(() => {
+                        rideau.classList.add('ouvert');
+                        revelerCartes();
+                    }, 550);
+                    minuteries.push(t);
+                }
+            }, 850);
+            minuteries.push(decompte);
+        }
+
+        /* --- Interaction --- */
+        passer.addEventListener('click', () => {
+            viderMinuteries();
+            rideau.classList.add('ouvert');
+            cartes.forEach(c => c.classList.add('voile'));
+            animerCompteurs();
+        });
+
+        if (rejouer) {
+            rejouer.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                lancer();
+            });
+        }
+
+        lancer();
+    })();
+</script>
+{% endif %}
+{% endblock %}
