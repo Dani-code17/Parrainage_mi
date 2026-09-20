@@ -11,4 +11,5 @@ urlpatterns = [
     path('teasing/', views.teasing_view, name='teasing'),
     path('revelation/', views.revelation_view, name='revelation'),
     path('mini-jeu/', views.mini_jeu, name='mini_jeu'),
+    path('ma-photo/', views.photo_view, name='photo'),
 ]

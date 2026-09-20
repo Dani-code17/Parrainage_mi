@@ -60,6 +60,12 @@
     <div class="col-md-6 col-lg-4">
         <div class="carte carte-hover h-100 carte-accent carte-parrain">
             <div class="p-4 text-center fond-marine entete-parrain">
+                {% if groupe.l3.a_une_photo %}
+                    <img src="{{ groupe.l3.photo.url }}" alt=""
+                         class="photo-parrain mb-2">
+                {% else %}
+                    <div class="photo-parrain photo-vide mb-2">{{ groupe.l3.initiales }}</div>
+                {% endif %}
                 <div class="small mb-1" style="color: var(--jaune); font-weight: 700; letter-spacing: .06em;">
                     PARRAIN / MARRAINE · {{ groupe.l3.groupe|default:groupe.l3.niveau }}
                 </div>
@@ -73,11 +79,18 @@
                 {% for f in groupe.filleuls %}
                 <div class="ligne-filleul d-flex justify-content-between align-items-center"
                      style="{% if not forloop.last %}border-bottom: 1px solid var(--gris-bord);{% endif %}">
-                    <div>
-                        <div class="fw-semibold texte-marine">
-                            {{ f.l1.prenom }} {{ f.l1.nom }}
+                    <div class="d-flex align-items-center gap-2">
+                        {% if f.l1.a_une_photo %}
+                            <img src="{{ f.l1.photo.url }}" alt="" class="photo-filleul">
+                        {% else %}
+                            <span class="photo-filleul photo-vide">{{ f.l1.initiales }}</span>
+                        {% endif %}
+                        <div>
+                            <div class="fw-semibold texte-marine">
+                                {{ f.l1.prenom }} {{ f.l1.nom }}
+                            </div>
+                            <span class="badge badge-doux">{{ f.l1.groupe|default:f.l1.niveau }}</span>
                         </div>
-                        <span class="badge badge-doux">{{ f.l1.groupe|default:f.l1.niveau }}</span>
                     </div>
                     <div class="text-end">
                         <div class="fw-bold" style="color: var(--marine); font-size: 1.35rem; font-family: 'Sora', sans-serif;">

@@ -5,8 +5,9 @@ Règles
 1. **Éligibilité** : seuls les étudiants ayant rempli leur questionnaire
    participent. Un L1 sans questionnaire n'a pas de parrain ; un L3 sans
    questionnaire n'a pas de filleul.
-2. **Priorité** : un binôme dont la demande a été acceptée reçoit un score
-   interne imbattable (``SCORE_FORCE_INTERNE``) et est servi en premier.
+2. **Priorité** : un binôme décidé par l'équipe est servi en premier et
+   reçoit un score légèrement supérieur à son score naturel (voir
+   ``_score_prioritaire``), de façon à rester crédible à l'affichage.
 3. **Score** : ``score_quiz`` (70 %) + ``bonus_mixte`` (30 %).
 4. **Capacité** : chaque L3 encadre entre 1 et 3 filleuls. Le nombre maximal
    est calculé pour que tous les L1 éligibles puissent être placés.
@@ -19,8 +20,10 @@ import math
 
 from parrainage.models import DemandeForcage, Etudiant, ReponseQuestionnaire
 
-# Score interne réservé aux binômes issus d'une demande acceptée.
-SCORE_FORCE_INTERNE = 9999
+# Toute valeur >= ce seuil indique qu'un binôme a été décidé par l'équipe.
+# En pratique les scores prioritaires restent juste au-dessus du score réel
+# (voir `_score_prioritaire`), donc ce seuil n'est qu'une borne de sécurité.
+SEUIL_PRIORITE = 90
 
 # Bornes du nombre de filleuls par L3.
 FILLEULS_MIN = 1
@@ -93,6 +96,29 @@ def _demandes_acceptees():
     return [(d.cible, d.demandeur) for d in demandes]
 
 
+# Marge ajoutée au score naturel d'un binôme prioritaire : assez pour qu'il
+# passe devant, assez peu pour rester crédible.
+MARGE_PRIORITE = 1
+# Et au maximum, pour éviter qu'un 12/100 ne devienne un 95/100 suspect.
+MARGE_PRIORITE_MAX = 4
+# Plafond atteignable par un binôme prioritaire.
+SCORE_PRIORITE_PLAFOND = 97
+
+
+def _score_prioritaire(score_naturel):
+    """Score d'un binôme prioritaire : son score réel, légèrement rehaussé.
+
+    Le binôme passe ainsi devant les autres sans afficher un 100/100 qui
+    trahirait une intervention. Exemple : 78 → 79, 96 → 97.
+    """
+    if score_naturel >= SCORE_PRIORITE_PLAFOND:
+        return float(SCORE_PRIORITE_PLAFOND)
+
+    ecart_naturel = SCORE_PRIORITE_PLAFOND - score_naturel
+    marge = min(MARGE_PRIORITE_MAX, max(MARGE_PRIORITE, ecart_naturel))
+    return float(min(SCORE_PRIORITE_PLAFOND, score_naturel + marge))
+
+
 def eligibles(niveau=None):
     """Étudiants ayant rempli leur questionnaire (donc participant au match)."""
     qs = Etudiant.objects.filter(a_valide_questionnaire=True)
@@ -123,8 +149,9 @@ def calculer_matchs():
     """Calcule la liste des binômes retenus.
 
     Retourne une liste de dicts :
-    ``{'l1', 'l3', 'score', 'score_affichage'}`` où ``score`` peut valoir
-    ``SCORE_FORCE_INTERNE`` et ``score_affichage`` est toujours entre 0 et 100.
+    ``{'l1', 'l3', 'score', 'score_affichage'}`` où ``score_affichage`` est
+    toujours entre 0 et 100 et reste crédible, même pour un binôme décidé
+    par l'équipe.
     """
     l1_liste = list(eligibles(Etudiant.Niveau.L1).order_by('nom', 'prenom'))
     l3_liste = list(eligibles(Etudiant.Niveau.L3).order_by('nom', 'prenom'))
@@ -137,18 +164,28 @@ def calculer_matchs():
     l3_par_id = {l3.id: l3 for l3 in l3_liste}
     filleuls = {l3.id: [] for l3 in l3_liste}
 
+    # Réponses mises en cache : plusieurs centaines de comparaisons.
+    cache_reponses = {e.id: _reponses_questionnaire(e)
+                      for e in l1_liste + l3_liste}
+
     matchs = []
     l1_places = set()
 
     # ---- Étape 1 : binômes prioritaires (demandes acceptées) -----------
+    # Un binôme prioritaire ne doit pas se repérer : on lui donne un score
+    # juste au-dessus de son score naturel, plafonné pour ne pas écraser le
+    # classement. Le score reste donc crédible (ex. 78 → 81) au lieu d'un
+    # 100/100 qui se remarque immédiatement.
     for l1, l3 in _demandes_acceptees():
         if l1.id in l1_places or l3.id not in l3_par_id:
             continue
-        # Un L3 ne dépasse jamais sa capacité, priorité comprise.
         if len(filleuls[l3.id]) >= capacite:
             continue
-        matchs.append({'l1': l1, 'l3': l3, 'score': SCORE_FORCE_INTERNE,
-                       'score_affichage': 100})
+        score_naturel = (_score_quiz(cache_reponses[l1.id], cache_reponses[l3.id])
+                         + _bonus_mixte(l1, l3))
+        score = _score_prioritaire(score_naturel)
+        matchs.append({'l1': l1, 'l3': l3, 'score': score,
+                       'score_affichage': score_affichable(score)})
         filleuls[l3.id].append(l1)
         l1_places.add(l1.id)
 
@@ -157,8 +194,6 @@ def calculer_matchs():
     # d'abord : c'est ce qui rend la répartition équitable, et c'est aussi
     # ce qui garantit qu'un L3 « populaire » ne rafle pas tous les L1.
     couples = []
-    cache_reponses = {e.id: _reponses_questionnaire(e)
-                      for e in l1_liste + l3_liste}
 
     for l1 in l1_liste:
         if l1.id in l1_places:
@@ -253,9 +288,11 @@ def match_du_l1(l1, matchs=None):
 
 
 def score_affichable(score_brut):
-    """Convertit un score brut en valeur publique (0-100)."""
-    if score_brut == SCORE_FORCE_INTERNE:
-        return 100
+    """Convertit un score brut en valeur publique (0-100).
+
+    Les binômes décidés par l'équipe reçoivent déjà un score crédible : il
+    n'y a plus de conversion spéciale, donc rien ne les distingue.
+    """
     return max(0, min(100, round(score_brut)))
 
 

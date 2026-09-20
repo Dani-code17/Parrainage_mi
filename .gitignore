@@ -48,3 +48,6 @@ desktop.ini
 .idea/
 .vscode/
 *.swp
+
+# Photos envoyées par les étudiants
+media/

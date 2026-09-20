@@ -125,3 +125,40 @@ class ConnexionForm(forms.Form):
 
     def clean_identifiant(self):
         return (self.cleaned_data.get('identifiant') or '').strip()
+
+
+class PhotoForm(forms.ModelForm):
+    """Ajout ou remplacement de la photo de profil.
+
+    Modifiable tant que l'on n'est pas entré dans la phase teasing : après,
+    les binômes sont calculés et la photo ne doit plus bouger.
+    """
+
+    class Meta:
+        model = Etudiant
+        fields = ['photo']
+        widgets = {
+            'photo': forms.ClearableFileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*',
+            }),
+        }
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        if not photo:
+            return photo
+        # 5 Mo maximum
+        if photo.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("La photo ne doit pas dépasser 5 Mo.")
+        # Formats d'image acceptés
+        import imghdr
+        try:
+            type_detecte = imghdr.what(photo)
+        except Exception:
+            type_detecte = None
+        if type_detecte not in ('jpeg', 'png', 'gif', 'webp', 'bmp'):
+            raise forms.ValidationError(
+                "Le fichier doit être une image (JPG, PNG, GIF ou WEBP)."
+            )
+        return photo

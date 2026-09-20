@@ -4,18 +4,47 @@
 {% block content %}
 
 <div class="entete-page d-flex flex-wrap justify-content-between align-items-center gap-3">
-    <div>
-        <h2>Bonjour {{ etudiant.prenom_usuel }} <span class="d-inline-block" style="animation: flotter 3s ease-in-out infinite;">👋</span></h2>
-        <p class="mb-0 small sous-titre">
-            {{ etudiant.get_niveau_display }}
-            {% if etudiant.groupe %}· {{ etudiant.groupe }}{% endif %}
-            · Identifiant : <strong>{{ etudiant.identifiant|default:"—" }}</strong>
-        </p>
+    <div class="d-flex align-items-center gap-3">
+        {% if etudiant.a_une_photo %}
+            <img src="{{ etudiant.photo.url }}" alt="" class="photo-entete">
+        {% else %}
+            <div class="photo-entete photo-vide">{{ etudiant.initiales }}</div>
+        {% endif %}
+        <div>
+            <h2>Bonjour {{ etudiant.prenom_usuel }} <span class="d-inline-block" style="animation: flotter 3s ease-in-out infinite;">👋</span></h2>
+            <p class="mb-0 small sous-titre">
+                {{ etudiant.get_niveau_display }}
+                {% if etudiant.groupe %}· {{ etudiant.groupe }}{% endif %}
+                · Identifiant : <strong>{{ etudiant.identifiant|default:"—" }}</strong>
+            </p>
+        </div>
     </div>
     <span class="badge badge-jaune fs-6 px-3 py-2">
         {{ parametre_evenement.get_phase_actuelle_display }}
     </span>
 </div>
+
+{# Rappel photo : tant qu'elle est modifiable (jusqu'au teasing inclus). #}
+{% if photo_modifiable %}
+    {% if not etudiant.a_une_photo %}
+    <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <i class="bi bi-camera"></i>
+            <strong>Ajoutez votre photo.</strong>
+            Elle apparaîtra sur l'écran de révélation, à côté de votre nom.
+        </div>
+        <a href="{% url 'photo' %}" class="btn btn-jaune btn-sm">
+            <i class="bi bi-upload"></i> Ajouter ma photo
+        </a>
+    </div>
+    {% else %}
+    <div class="text-end mb-3">
+        <a href="{% url 'photo' %}" class="btn btn-contour-marine btn-sm">
+            <i class="bi bi-camera"></i> Changer ma photo
+        </a>
+    </div>
+    {% endif %}
+{% endif %}
 
 {# ============================ PHASE INSCRIPTION ============================ #}
 {% if phase == 'inscription' %}

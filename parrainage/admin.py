@@ -197,7 +197,7 @@ class EtudiantAdmin(admin.ModelAdmin):
     list_per_page = 50
 
     fieldsets = (
-        ('Identité', {'fields': ('nom', 'prenom', 'niveau', 'groupe')}),
+        ('Identité', {'fields': ('nom', 'prenom', 'niveau', 'groupe', 'photo')}),
         ('Sexe', {
             'fields': ('sexe', 'sexe_deduit'),
             'description': "Le sexe déduit automatiquement est à confirmer. "

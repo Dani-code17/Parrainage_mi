@@ -41,6 +41,13 @@ class Etudiant(models.Model):
     sexe_deduit = models.BooleanField(
         default=False, verbose_name="Sexe déduit (à vérifier)",
     )
+    # Photo de profil : recommandée mais non obligatoire.
+    photo = models.ImageField(
+        upload_to='photos/', null=True, blank=True,
+        verbose_name="Photo de profil",
+        help_text="Une photo récente et reconnaissable. Recommandée : elle "
+                  "apparaît sur l'écran de révélation.",
+    )
     date_inscription = models.DateTimeField(auto_now_add=True)
     a_valide_questionnaire = models.BooleanField(default=False)
     est_eligible = models.BooleanField(default=True)
@@ -61,6 +68,17 @@ class Etudiant(models.Model):
     def prenom_usuel(self):
         """Premier prénom, utilisé pour l'affichage court et les identifiants."""
         return (self.prenom or '').split()[0] if self.prenom else ''
+
+    @property
+    def initiales(self):
+        """Initiales (prénom + nom), affichées à défaut de photo."""
+        p = (self.prenom or ' ').strip()[:1].upper()
+        n = (self.nom or ' ').strip()[:1].upper()
+        return f"{p}{n}".strip() or '?'
+
+    @property
+    def a_une_photo(self):
+        return bool(self.photo)
 
     @property
     def a_repondu(self):

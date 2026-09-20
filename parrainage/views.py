@@ -11,7 +11,7 @@ from .models import (
     Etudiant, ReponseQuestionnaire, ParametreEvenement, DemandeForcage
 )
 from .forms import (
-    InscriptionForm, QuestionnaireForm, ConnexionForm
+    InscriptionForm, QuestionnaireForm, ConnexionForm, PhotoForm
 )
 from .matching import (
     calculer_matchs, question_commune, score_affichable,
@@ -221,6 +221,8 @@ def dashboard(request):
         'phase': p.phase_actuelle,
         'est_L3': etudiant.est_L3,
         'est_L1': etudiant.est_L1,
+        # La photo reste modifiable jusqu'à la phase teasing incluse.
+        'photo_modifiable': p.phase_actuelle in PHASES_PHOTO_MODIFIABLE,
     }
 
     # Les demandes de l'étudiant (L3).
@@ -296,6 +298,55 @@ def mini_jeu(request):
     etudiant = get_etudiant(request)
     return render(request, 'parrainage/mini_jeu.html', {
         'etudiant': etudiant,
+    })
+
+
+# ---------------------------------------------------------------- Photo de profil
+
+# La photo peut être ajoutée ou remplacée jusqu'à la phase teasing incluse.
+PHASES_PHOTO_MODIFIABLE = (
+    ParametreEvenement.Phase.INSCRIPTION,
+    ParametreEvenement.Phase.VERROUILLE,
+    ParametreEvenement.Phase.TEASING,
+)
+
+
+@login_required
+def photo_view(request):
+    """Ajout ou remplacement de la photo de profil.
+
+    Ouvert jusqu'à la phase teasing incluse : au-delà, le binôme est figé
+    et la photo n'est plus modifiable par l'étudiant.
+    """
+    etudiant = get_etudiant(request)
+    if not etudiant:
+        return redirect('home')
+
+    p = parametres()
+    modifiable = p.phase_actuelle in PHASES_PHOTO_MODIFIABLE
+
+    if request.method == 'POST':
+        if not modifiable:
+            messages.error(
+                request,
+                "La photo n'est plus modifiable à cette étape de l'événement. "
+                "Contactez l'équipe si besoin."
+            )
+            return redirect('dashboard')
+
+        form = PhotoForm(request.POST, request.FILES, instance=etudiant)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Votre photo a bien été enregistrée.")
+            return redirect('dashboard')
+    else:
+        form = PhotoForm(instance=etudiant)
+
+    return render(request, 'parrainage/photo.html', {
+        'form': form,
+        'etudiant': etudiant,
+        'modifiable': modifiable,
+        'parametre_evenement': p,
     })
 
 

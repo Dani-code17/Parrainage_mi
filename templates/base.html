@@ -164,6 +164,17 @@
             text-decoration: none;
         }
         .marque:hover { color: var(--blanc); }
+        .marque .logo-marque {
+            height: 2.5rem;
+            width: auto;
+            border-radius: .45rem;
+            background: var(--blanc);
+            padding: 3px 5px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, .22);
+            transition: transform .35s var(--ease);
+        }
+        /* Sur fond blanc du logo, on garde une pastille nette */
+        .marque:hover .logo-marque { transform: rotate(-6deg) scale(1.06); }
         .marque .pastille {
             background: var(--degrade-jaune);
             color: var(--marine);
@@ -199,6 +210,25 @@
             background: var(--jaune);
         }
         .barre-haut .navbar-toggler { border-color: rgba(255, 255, 255, .35); }
+
+        /* Avatar dans la barre de navigation */
+        .avatar-nav {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--jaune);
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .avatar-nav.avatar-vide {
+            display: inline-grid;
+            place-items: center;
+            background: var(--jaune);
+            color: var(--marine);
+            font-size: .72rem;
+            font-weight: 800;
+            font-family: 'Sora', sans-serif;
+        }
 
         /* ================================================================
            CARTES
@@ -607,6 +637,47 @@
         }
 
         /* ================================================================
+           PHOTOS DE PROFIL
+           ================================================================ */
+        .photo-parrain {
+            width: 84px; height: 84px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--jaune);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, .28);
+            display: inline-block;
+            transition: transform .4s var(--ease);
+        }
+        .carte-parrain:hover .photo-parrain { transform: scale(1.08); }
+        .photo-filleul {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--jaune);
+            flex: 0 0 42px;
+        }
+        .photo-vide {
+            display: inline-grid;
+            place-items: center;
+            background: var(--degrade-jaune);
+            color: var(--marine);
+            font-family: 'Sora', sans-serif;
+            font-weight: 800;
+        }
+        .photo-parrain.photo-vide { font-size: 1.5rem; }
+        .photo-filleul.photo-vide { font-size: .8rem; }
+
+        .photo-entete {
+            width: 66px; height: 66px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--jaune);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .25);
+            flex: 0 0 66px;
+        }
+        .photo-entete.photo-vide { font-size: 1.3rem; }
+
+        /* ================================================================
            RÉVÉLATION — séquence de dévoilement
            ================================================================ */
         /* Rideau d'ouverture */
@@ -673,7 +744,7 @@
 <nav class="navbar navbar-expand-lg barre-haut py-2" id="barreHaut">
     <div class="container">
         <a class="marque" href="{% url 'home' %}">
-            <span class="pastille">P</span>
+            <img src="{% static 'parrainage/img/logo.png' %}" alt="" class="logo-marque">
             <span>Parrainage <span class="jaune">MIAGE</span></span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -697,6 +768,20 @@
                             <i class="bi bi-person-circle"></i> Mon espace
                         </a>
                     </li>
+                    {% if user.etudiant %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/ma-photo/' in request.path %}actif{% endif %} d-flex align-items-center gap-2"
+                           href="{% url 'photo' %}" title="Ma photo">
+                            {% if user.etudiant.a_une_photo %}
+                                <img src="{{ user.etudiant.photo.url }}" alt=""
+                                     class="avatar-nav">
+                            {% else %}
+                                <span class="avatar-nav avatar-vide">{{ user.etudiant.initiales }}</span>
+                            {% endif %}
+                            <span class="d-lg-none">Ma photo</span>
+                        </a>
+                    </li>
+                    {% endif %}
                     <li class="nav-item">
                         <form method="post" action="{% url 'logout' %}" class="d-inline">
                             {% csrf_token %}

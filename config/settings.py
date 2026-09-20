@@ -143,6 +143,10 @@ PASSWORD_HASHERS = [
 
 STATIC_URL = 'static/'
 
+# Fichiers envoyés par les utilisateurs (photos de profil)
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
