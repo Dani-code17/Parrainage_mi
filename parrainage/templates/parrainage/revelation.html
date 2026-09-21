@@ -17,11 +17,7 @@
 </div>
 
 <div class="hero text-center">
-    <span class="orbite o1"></span>
-    <span class="orbite o2"></span>
-    <span class="orbite o3"></span>
-
-    <span class="etiquette pop mb-3"><i class="bi bi-stars"></i> Le grand jour</span>
+    <span class="etiquette mb-3"><i class="bi bi-stars"></i> Le grand jour</span>
     <h1 class="display-5 mb-2">La grande révélation</h1>
     <p class="mb-0" style="color: rgba(255,255,255,.88);">
         {{ stats.l1_places }} binôme{{ stats.l1_places|pluralize }} formé{{ stats.l1_places|pluralize }} cette année.
@@ -74,7 +70,6 @@
                     Accompagne {{ groupe.nb_filleuls }} filleul{{ groupe.nb_filleuls|pluralize }}
                 </div>
             </div>
-
             <div class="p-3">
                 {% for f in groupe.filleuls %}
                 <div class="ligne-filleul d-flex justify-content-between align-items-center"
@@ -159,7 +154,7 @@
         /* --- Confettis --- */
         function confettis(nombre) {
             if (sansAnimation) return;
-            const couleurs = ['#ffc72c', '#ffffff', '#1d4a8c', '#ffe08a'];
+            const couleurs = ['#ffc72c', '#ffffff', '#02498f', '#ffe08a'];
             for (let i = 0; i < nombre; i++) {
                 const c = document.createElement('div');
                 c.className = 'confetti';

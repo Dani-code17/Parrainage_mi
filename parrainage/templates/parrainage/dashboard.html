@@ -11,7 +11,7 @@
             <div class="photo-entete photo-vide">{{ etudiant.initiales }}</div>
         {% endif %}
         <div>
-            <h2>Bonjour {{ etudiant.prenom_usuel }} <span class="d-inline-block" style="animation: flotter 3s ease-in-out infinite;">👋</span></h2>
+            <h2>Bonjour {{ etudiant.prenom_usuel }}</h2>
             <p class="mb-0 small sous-titre">
                 {{ etudiant.get_niveau_display }}
                 {% if etudiant.groupe %}· {{ etudiant.groupe }}{% endif %}
