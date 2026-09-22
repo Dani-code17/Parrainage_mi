@@ -230,16 +230,25 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # ------------------------------------------------------ Sécurité en ligne
-# Activés automatiquement dès que DEBUG est à False.
+# Ces protections ne s'activent qu'en production (DEBUG=False).
+#
+# ⚠️ Les cookies « secure » exigent HTTPS. Tant que le site est testé en
+# HTTP sur une adresse IP, il faut les désactiver, sinon le navigateur ne
+# renvoie pas le cookie CSRF et la connexion échoue en « 403 Interdit ».
+# On les active en mettant DJANGO_HTTPS=1 (une fois le certificat en place).
 if not DEBUG:
+    HTTPS_ACTIF = _env_bool('DJANGO_HTTPS', False)
+
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_SSL_REDIRECT = _env_bool('DJANGO_SSL_REDIRECT', True)
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_SSL_REDIRECT = _env_bool('DJANGO_SSL_REDIRECT', HTTPS_ACTIF)
+    SESSION_COOKIE_SECURE = HTTPS_ACTIF
+    CSRF_COOKIE_SECURE = HTTPS_ACTIF
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+
+    if HTTPS_ACTIF:
+        SECURE_HSTS_SECONDS = 31536000
+        SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
