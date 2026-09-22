@@ -83,11 +83,10 @@ class CatalogueTests(TestCase):
         for code in ('q21', 'q23', 'q25'):
             self.assertNotIn(code, catalogue.CODES_NOTES)
 
-    def test_sept_questions_facultatives(self):
+    def test_toutes_les_questions_sont_obligatoires(self):
+        """Aucune question n'est facultative : tout doit être rempli."""
         facultatives = {q.code for q in catalogue.QUESTIONS if q.facultatif}
-        self.assertEqual(
-            facultatives,
-            {'q10', 'q11', 'q12', 'q13', 'q14', 'q15', 'q16'})
+        self.assertEqual(facultatives, set())
 
     def test_six_dimensions_ponderees(self):
         noms = [nom for nom, _ in catalogue.DIMENSIONS]
@@ -113,14 +112,13 @@ class ReponsesModeleTests(TestCase):
         self.assertEqual(q.texte('q25'), 'Bonjour !')
         self.assertIsNone(q.choix('q2'))
 
-    def test_reponses_manquantes_ignorent_les_facultatives(self):
-        """Une question facultative vide ne bloque pas la validation."""
+    def test_toutes_les_questions_sont_exigees(self):
+        """Une question sans réponse empêche la validation."""
         donnees = generer_reponses(graine=42, niveau='L1')
-        for code in ('q10', 'q11', 'q12', 'q13', 'q14', 'q15', 'q16'):
-            donnees.pop(code, None)
+        donnees.pop('q12')
         q = ReponseQuestionnaire(etudiant=self.etudiant, donnees=donnees)
-        self.assertEqual(q.reponses_manquantes(), [])
-        self.assertTrue(q.est_complete)
+        self.assertIn('q12', q.reponses_manquantes())
+        self.assertFalse(q.est_complete)
 
     def test_reponses_manquantes_detecte_une_obligatoire(self):
         donnees = generer_reponses(graine=42, niveau='L1')

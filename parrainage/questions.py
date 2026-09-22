@@ -13,8 +13,9 @@ Types de question
 - ``texte``   : réponse libre
 - ``echelle`` : note entière de 0 à 10
 
-Les questions marquées ``facultatif`` peuvent être passées : elles ne comptent
-pas comme manquantes et ne sont pas pénalisées.
+**Toutes les questions sont obligatoires** : il faut y répondre pour pouvoir
+valider le questionnaire. Le champ ``facultatif`` reste disponible dans le
+catalogue si l'équipe souhaite en rendre une passable plus tard.
 """
 
 from dataclasses import dataclass, field
@@ -190,7 +191,6 @@ QUESTIONS = [
             "Jamais", "Rarement", "Occasionnellement", "Régulièrement",
             "Je préfère ne pas répondre",
         ),
-        facultatif=True,
     ),
     Question(
         'q11', _SECTION_4,
@@ -199,10 +199,9 @@ QUESTIONS = [
             "Jamais", "Rarement", "Occasionnellement", "Régulièrement",
             "Je préfère ne pas répondre",
         ),
-        facultatif=True,
     ),
 
-    # -------------------------------- 5. Religion & valeurs (facultatif)
+    # ---------------------------------------- 5. Religion & valeurs
     Question(
         'q12', _SECTION_5, "Tu te définirais comme…", TYPE_CHOIX,
         _options(
@@ -214,7 +213,6 @@ QUESTIONS = [
             "Athée",
             "Je préfère ne pas répondre",
         ),
-        facultatif=True,
     ),
     Question(
         'q13', _SECTION_5,
@@ -225,7 +223,6 @@ QUESTIONS = [
             "Pas du tout",
             "Peu importe tant qu'il/elle respecte mes convictions",
         ),
-        facultatif=True,
     ),
     Question(
         'q14', _SECTION_5, "Tes 3 valeurs les plus importantes ?",
@@ -235,10 +232,10 @@ QUESTIONS = [
             "Liberté", "Respect", "Solidarité", "Discipline", "Tolérance",
             "Humour",
         ),
-        facultatif=True, max_choix=3,
+        max_choix=3,
     ),
 
-    # -------------------------- 6. Un peu de piment (léger, facultatif)
+    # ---------------------------------------- 6. Un peu de piment
     Question(
         'q15', _SECTION_6, "Ton plus gros red flag chez quelqu'un ?",
         TYPE_CHOIX,
@@ -247,7 +244,6 @@ QUESTIONS = [
             "Irrespect", "Mauvaise communication", "Égocentrisme",
             "Dépendance affective",
         ),
-        facultatif=True,
     ),
     Question(
         'q16', _SECTION_6,
@@ -259,7 +255,6 @@ QUESTIONS = [
             "Mauvaise idée",
             "INTERDIT, c'est la famille maintenant 😭",
         ),
-        facultatif=True,
     ),
 
     # ------------------------ 7. Questions qui révèlent tout

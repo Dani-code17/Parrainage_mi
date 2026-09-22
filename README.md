@@ -84,8 +84,9 @@ avec quatre types de réponse :
 | Note de 0 à 10 | « Envie de créer un lien » | oui |
 | Texte libre | Q21, Q23, Q25 | **non** |
 
-- **7 questions facultatives** (alcool, tabac, religion, valeurs, red flag,
-  crush) : elles peuvent être passées sans bloquer la validation.
+- **Toutes les questions sont obligatoires** : il faut répondre aux 25 pour
+  pouvoir valider. Le catalogue prévoit un champ `facultatif` si l'équipe
+  souhaite en rendre une passable plus tard.
 - **La question 21 s'adapte au niveau** : un L1 lit « ce que tu attends de ton
   parrain », un L3 lit « ce que tu peux apporter à ton filleul ». Chacun ne
   voit qu'une seule version.
@@ -157,4 +158,26 @@ déroulé des 4 phases, points à vérifier, et commandes pour enchaîner les te
 ```bash
 run.bat                                        # démarrer
 venv\Scripts\python.exe manage.py remettre_a_zero   # base propre entre deux simulations
+```
+
+## 🚀 Mettre en ligne
+
+Le guide **[GUIDE_DEPLOIEMENT.md](GUIDE_DEPLOIEMENT.md)** couvre l'installation
+sur un serveur (école, VPS, Oracle Cloud), PostgreSQL, Nginx, HTTPS, ainsi
+que **la remise à zéro de la base à distance**.
+
+L'essentiel :
+
+```bash
+cp .env.example .env      # puis renseigner la clé, le domaine et DATABASE_URL
+python manage.py migrate
+python manage.py collectstatic --noinput
+gunicorn config.wsgi:application --config gunicorn.conf.py
+```
+
+En ligne, la remise à zéro se fait par la même commande, via SSH :
+
+```bash
+python manage.py remettre_a_zero          # garde les étudiants et leurs identifiants
+python manage.py remettre_a_zero --tout   # supprime aussi les étudiants
 ```

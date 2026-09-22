@@ -15,17 +15,61 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# En local, on lit le fichier .env s'il existe (voir .env.example).
+# En ligne, les variables sont fournies par l'hébergeur : le fichier est
+# simplement absent et cette étape est ignorée.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / '.env')
+except ImportError:
+    pass
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+# =====================================================================
+#  Configuration pilotée par l'environnement
+#
+#  En local, rien à définir : les valeurs par défaut conviennent.
+#  En ligne, on définit les variables d'environnement (voir .env.example).
+# =====================================================================
+
+import os
+
+
+def _env(nom, defaut=None):
+    """Lit une variable d'environnement, avec valeur par défaut."""
+    return os.environ.get(nom, defaut)
+
+
+def _env_bool(nom, defaut=False):
+    """Lit un booléen écrit « 1 », « true », « oui »… dans l'environnement."""
+    valeur = os.environ.get(nom)
+    if valeur is None:
+        return defaut
+    return valeur.strip().lower() in ('1', 'true', 'vrai', 'oui', 'yes', 'on')
+
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-6sgpjp5yq(&1e8w8bb#6ce4&-+obm=-6_34ueec33!3@xwda)f'
+# En ligne, définir DJANGO_SECRET_KEY avec une longue chaîne aléatoire.
+SECRET_KEY = _env(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-6sgpjp5yq(&1e8w8bb#6ce4&-+obm=-6_34ueec33!3@xwda)f',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = _env_bool('DJANGO_DEBUG', True)
 
-ALLOWED_HOSTS = ['*']
+# En production, lister les domaines autorisés : « miage.ecole.ci,www.… »
+ALLOWED_HOSTS = [
+    h.strip() for h in _env('DJANGO_ALLOWED_HOSTS', '*').split(',') if h.strip()
+]
+
+# Origines de confiance pour les formulaires (https://…, séparées par virgule)
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in _env('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()
+]
 
 # Application definition
 
@@ -43,6 +87,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise sert les fichiers statiques (CSS, logo) en production,
+    # juste après la couche de sécurité.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -72,15 +119,42 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-# Database
+# Base de données
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+#
+# Par défaut : SQLite, pratique en local.
+# Si DATABASE_URL est défini (PostgreSQL), on l'utilise — c'est le cas en
+# ligne, où plusieurs étudiants écrivent en même temps.
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DATABASE_URL = _env('DATABASE_URL')
+if DATABASE_URL:
+    import urllib.parse as _urlparse
+
+    _url = _urlparse.urlparse(DATABASE_URL)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': _url.path.lstrip('/'),
+            'USER': _url.username or '',
+            'PASSWORD': _url.password or '',
+            'HOST': _url.hostname or '',
+            'PORT': str(_url.port or ''),
+            # Connexion persistante : évite de rouvrir une connexion à
+            # chaque requête quand 127 étudiants répondent en même temps.
+            'CONN_MAX_AGE': 600,
+            'OPTIONS': {'connect_timeout': 10},
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+            # Réduit les conflits d'écriture si plusieurs personnes
+            # répondent en même temps en local.
+            'OPTIONS': {'timeout': 20},
+        }
+    }
 
 
 # Password validation
@@ -141,10 +215,31 @@ PASSWORD_HASHERS = [
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+# Dossier où `collectstatic` rassemble les fichiers pour le serveur web.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+# WhiteNoise compresse et met en cache les fichiers statiques.
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 # Fichiers envoyés par les utilisateurs (photos de profil)
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# ------------------------------------------------------ Sécurité en ligne
+# Activés automatiquement dès que DEBUG est à False.
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = _env_bool('DJANGO_SSL_REDIRECT', True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

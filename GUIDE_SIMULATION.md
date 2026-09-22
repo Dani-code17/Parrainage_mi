@@ -65,7 +65,8 @@ Tu en donnes un à chacun :
 - [ ] Une seule question s'affiche à la fois, avec sa section
 - [ ] Les options se surlignent au clic, et la question suivante arrive seule
 - [ ] La barre de progression avance à chaque réponse
-- [ ] Les questions marquées **facultatif** peuvent être passées
+- [ ] **Toutes les questions sont obligatoires** : impossible de valider sans
+      avoir tout rempli
 - [ ] La question 21 ne s'affiche **pas** dans la même version pour un L1 et un L3
 - [ ] Impossible d'avancer sur une question obligatoire laissée vide
 - [ ] Le raccourci clavier `1`…`6` sélectionne une option

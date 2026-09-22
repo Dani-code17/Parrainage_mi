@@ -1,17 +1,23 @@
-"""Remet l'événement à zéro sans toucher aux comptes des étudiants.
+"""Remet l'événement à zéro. Fonctionne aussi en ligne.
 
 Usage ::
 
-    python manage.py remettre_a_zero
-    python manage.py remettre_a_zero --garder-etudiants
+    python manage.py remettre_a_zero              # demande confirmation
+    python manage.py remettre_a_zero --oui        # sans confirmation
+    python manage.py remettre_a_zero --tout       # efface AUSSI les comptes
 
-Sert à enchaîner les simulations : on efface les réponses et les
-associations, on remet la phase à « inscription », mais les 127 étudiants
-gardent leurs identifiants et leurs mots de passe.
+Par défaut, les étudiants et leurs identifiants sont **conservés** : seules
+les réponses, les associations et la phase sont remises à zéro. C'est ce
+qu'il faut entre deux tests.
 
-⚠️ Sans ``--garder-etudiants``, les étudiants eux-mêmes sont **conservés**
-(défaut). L'option existe surtout pour rendre l'intention explicite.
+``--tout`` va plus loin et supprime les étudiants eux-mêmes (comptes,
+identifiants, photos). À n'utiliser que pour repartir d'une page blanche.
+
+⚠️ En ligne, la commande demande une confirmation renforcée : il n'y a pas
+de sauvegarde automatique.
 """
+
+import sys
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -21,49 +27,87 @@ from parrainage.models import (
 )
 
 
+def _forcer_utf8():
+    for flux in (sys.stdout, sys.stderr):
+        try:
+            flux.reconfigure(encoding='utf-8', errors='replace')
+        except (AttributeError, ValueError):
+            pass
+
+
 class Command(BaseCommand):
-    help = ("Efface réponses et associations, remet la phase à « inscription », "
+    help = ("Efface réponses, associations et remet la phase à « inscription », "
             "sans supprimer les comptes étudiants.")
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--garder-etudiants', action='store_true',
-            help="Ne touche pas aux étudiants (comportement par défaut).",
+            '--oui', action='store_true',
+            help="Ne pas demander de confirmation (utile en script).",
         )
         parser.add_argument(
-            '--oui', action='store_true',
-            help="Ne demande pas de confirmation.",
+            '--tout', action='store_true',
+            help="Supprime AUSSI les étudiants, leurs comptes et leurs photos.",
         )
 
     def handle(self, *args, **options):
-        # Récapitulatif de ce qui va être effacé.
+        _forcer_utf8()
+
         nb_reponses = ReponseQuestionnaire.objects.count()
         nb_assoc = DemandeForcage.objects.count()
-        nb_ayant_repondu = Etudiant.objects.filter(
-            a_valide_questionnaire=True).count()
+        nb_valides = Etudiant.objects.filter(a_valide_questionnaire=True).count()
+        nb_etudiants = Etudiant.objects.count()
 
-        if not options['oui'] and (nb_reponses or nb_assoc or nb_ayant_repondu):
-            self.stdout.write("Vont être effacés :")
-            self.stdout.write(f"   - {nb_reponses} questionnaire(s)")
-            self.stdout.write(f"   - {nb_assoc} association(s)")
-            self.stdout.write(f"   - {nb_ayant_repondu} étudiant(s) remis à "
-                              "« n'a pas répondu »")
-            self.stdout.write("")
-            reponse = input("Confirmer ? [o/N] ").strip().lower()
-            if reponse not in ('o', 'oui', 'y', 'yes'):
-                self.stdout.write(self.style.WARNING("Annulé."))
-                return
+        self._avertir(nb_reponses, nb_assoc, nb_valides, nb_etudiants,
+                      tout=options['tout'])
 
-        self._executer()
+        if not options['oui'] and not self._confirmer(options['tout']):
+            self.stdout.write(self.style.WARNING("Annulé — rien n'a été modifié."))
+            return
+
+        self._executer(tout=options['tout'])
         self._resume()
 
+    # ------------------------------------------------------------- Étapes
+
+    def _avertir(self, nb_reponses, nb_assoc, nb_valides, nb_etudiants, tout):
+        self.stdout.write("")
+        self.stdout.write(self.style.WARNING("Vont être supprimés :"))
+        self.stdout.write(f"   - {nb_reponses} questionnaire(s) et leurs réponses")
+        self.stdout.write(f"   - {nb_assoc} association(s) prioritaire(s)")
+        self.stdout.write(f"   - l'état « a répondu » de {nb_valides} étudiant(s)")
+        if tout:
+            self.stdout.write(self.style.ERROR(
+                f"   - LES {nb_etudiants} ÉTUDIANTS, leurs comptes et leurs "
+                "identifiants"))
+        else:
+            self.stdout.write(self.style.SUCCESS(
+                f"   (les {nb_etudiants} étudiants et leurs identifiants sont "
+                "CONSERVÉS)"))
+        self.stdout.write("")
+
+    def _confirmer(self, tout):
+        attendu = 'SUPPRIMER TOUT' if tout else 'oui'
+        question = (f"Tapez « {attendu} » pour confirmer : "
+                    if tout else "Confirmer ? [o/N] ")
+        try:
+            reponse = input(question).strip()
+        except EOFError:
+            return False
+        if tout:
+            return reponse == attendu
+        return reponse.lower() in ('o', 'oui', 'y', 'yes')
+
     @transaction.atomic
-    def _executer(self):
+    def _executer(self, tout=False):
         ReponseQuestionnaire.objects.all().delete()
         DemandeForcage.objects.all().delete()
-        Etudiant.objects.filter(a_valide_questionnaire=True).update(
-            a_valide_questionnaire=False
-        )
+
+        if tout:
+            # Les comptes utilisateurs liés partent avec les étudiants.
+            Etudiant.objects.all().delete()
+        else:
+            Etudiant.objects.filter(a_valide_questionnaire=True).update(
+                a_valide_questionnaire=False)
 
         p = ParametreEvenement.obtenir()
         p.phase_actuelle = ParametreEvenement.Phase.INSCRIPTION
@@ -75,13 +119,15 @@ class Command(BaseCommand):
         l3 = Etudiant.objects.filter(niveau='L3').count()
         avec_id = Etudiant.objects.exclude(identifiant__isnull=True).count()
 
-        self.stdout.write(self.style.SUCCESS("\nBase remise à zéro."))
-        self.stdout.write(f"   Étudiants conservés : {l1} L1, {l3} L3 "
+        self.stdout.write("")
+        self.stdout.write(self.style.SUCCESS("Base remise à zéro."))
+        self.stdout.write(f"   Étudiants        : {l1} L1, {l3} L3 "
                           f"({avec_id} avec identifiant)")
-        self.stdout.write(f"   Questionnaires      : "
+        self.stdout.write(f"   Questionnaires   : "
                           f"{ReponseQuestionnaire.objects.count()}")
-        self.stdout.write(f"   Associations        : "
+        self.stdout.write(f"   Associations     : "
                           f"{DemandeForcage.objects.count()}")
-        self.stdout.write(f"   Phase               : inscription "
+        self.stdout.write("   Phase            : inscription "
                           "(révélation non déclenchée)")
-        self.stdout.write("\nPrêt pour une nouvelle simulation.")
+        self.stdout.write("")
+        self.stdout.write("Prêt pour un nouveau test.")

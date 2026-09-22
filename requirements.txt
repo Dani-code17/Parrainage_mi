@@ -1,4 +1,11 @@
+# Application
 Django>=5.0,<6.0
 django-crispy-forms
 crispy-bootstrap5
 Pillow
+
+# Production
+gunicorn>=21.0
+whitenoise>=6.6          # sert les fichiers statiques sans serveur web dédié
+psycopg[binary]>=3.1     # pilote PostgreSQL
+python-dotenv>=1.0       # lecture du fichier .env en local

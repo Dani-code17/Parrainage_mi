@@ -30,6 +30,7 @@ __pycache__/
 # Variables d'environnement et secrets
 .env
 .env.*
+!.env.example
 *.key
 *.pem
 secrets/
