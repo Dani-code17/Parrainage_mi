@@ -56,17 +56,23 @@ Tu en donnes un à chacun :
 3. Chaque testeur ouvre **http://127.0.0.1:8000/** et clique **Se connecter**.
 4. Il saisit son **identifiant** et son **mot de passe**.
 5. Il arrive sur **Mon espace**, puis clique **Remplir le questionnaire**.
-6. Il répond aux 15 questions. La barre de progression se remplit.
+6. Il répond aux 25 questions, **une par écran**. La barre de progression se
+   remplit ; les questions à choix avancent automatiquement.
 7. Il clique **Valider mes réponses** et confirme.
 
 **À vérifier :**
 
+- [ ] Une seule question s'affiche à la fois, avec sa section
+- [ ] Les options se surlignent au clic, et la question suivante arrive seule
 - [ ] La barre de progression avance à chaque réponse
-- [ ] Le message d'avertissement est visible **avant** de commencer
+- [ ] Les questions marquées **facultatif** peuvent être passées
+- [ ] La question 21 ne s'affiche **pas** dans la même version pour un L1 et un L3
+- [ ] Impossible d'avancer sur une question obligatoire laissée vide
+- [ ] Le raccourci clavier `1`…`6` sélectionne une option
 - [ ] Après validation, un message vert confirme l'enregistrement
 - [ ] **Le testeur ne peut plus modifier ses réponses** : le questionnaire est
-      en lecture seule, les champs sont grisés
-- [ ] Dans l'admin → *Réponses aux questionnaires*, tu vois ses 15 réponses
+      en lecture seule
+- [ ] Dans l'admin → *Réponses aux questionnaires*, tu vois ses 25 réponses
 
 > 📌 **Point clé** : c'est ici que se joue le verrouillage. Demande à un testeur
 > d'essayer de recharger `/quiz/` : il doit tomber sur le message de

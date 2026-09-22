@@ -19,7 +19,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from parrainage.models import Etudiant, ReponseQuestionnaire
-from parrainage.questionnaires import PROFILS, generer_reponses, profil_de
+from parrainage.questionnaires import generer_avec_profil
 
 
 def _forcer_utf8():
@@ -89,16 +89,16 @@ class Command(BaseCommand):
     def _remplir(self, etudiants):
         compteur = {}
         for etudiant in etudiants:
-            reponses = generer_reponses(graine=_graine(etudiant))
+            reponses, profil = generer_avec_profil(
+                _graine(etudiant), etudiant.niveau)
             ReponseQuestionnaire.objects.update_or_create(
                 etudiant=etudiant,
-                defaults={f'q{i + 1}': v for i, v in enumerate(reponses)},
+                defaults={'donnees': reponses, 'verrouille': True},
             )
             if not etudiant.a_valide_questionnaire:
                 etudiant.a_valide_questionnaire = True
                 etudiant.save(update_fields=['a_valide_questionnaire'])
 
-            profil = profil_de(reponses)
             compteur[profil] = compteur.get(profil, 0) + 1
         return compteur
 
@@ -106,9 +106,9 @@ class Command(BaseCommand):
         self.stdout.write(self.style.MIGRATE_HEADING(
             f"\nAPERÇU ({len(etudiants)} étudiant(s), rien n'a été enregistré)"))
         for e in etudiants[:8]:
-            r = generer_reponses(graine=_graine(e))
+            r, profil = generer_avec_profil(_graine(e), e.niveau)
             self.stdout.write(f"   {e.niveau} {e.nom[:18]:<18} "
-                              f"{profil_de(r):<12} {r}")
+                              f"{profil:<12} {len(r)} réponses")
         if len(etudiants) > 8:
             self.stdout.write(f"   … et {len(etudiants) - 8} autres.")
 
@@ -129,7 +129,8 @@ class Command(BaseCommand):
                 q = getattr(e, 'questionnaire', None)
                 if q:
                     self.stdout.write(f"\n   Détail de {e.nom} {e.prenom} :")
-                    self.stdout.write(f"      {q.reponses()}")
+                    for question, rendu in q.reponses_lisibles()[:6]:
+                        self.stdout.write(f"      {question.code.upper()} : {rendu}")
 
         self.stdout.write(
             "\n   Ces réponses sont des données de démonstration, "

@@ -27,10 +27,11 @@
                     <p class="texte-doux small mb-2 mt-2">
                         Votre point commun le plus marquant :
                     </p>
-                    <p class="fs-5 fst-italic texte-marine">«&nbsp;{{ entree.indice.2 }}&nbsp;»</p>
+                    <p class="small texte-doux mb-1">{{ entree.indice.question }}</p>
+                    <p class="fs-5 fst-italic texte-marine">«&nbsp;{{ entree.indice.reponse }}&nbsp;»</p>
 
-                    <div class="score-anneau my-3" style="--pct: {{ entree.indice.1 }}0;">
-                        <span>{{ entree.indice.1 }}/5</span>
+                    <div class="score-anneau my-3" style="--pct: {{ entree.indice.pct }};">
+                        <span>{{ entree.indice.pct }}%</span>
                     </div>
                     <span class="badge badge-jaune">Réponse commune</span>
                 </div>

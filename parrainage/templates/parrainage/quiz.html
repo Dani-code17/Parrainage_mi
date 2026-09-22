@@ -2,127 +2,463 @@
 {% load crispy_forms_tags %}
 {% block title %}Le questionnaire{% endblock %}
 
+{% block styles %}
+<style>
+    /* ================= Questionnaire « une question à la fois » ======== */
+    .quiz-entete {
+        background: var(--marine);
+        color: #fff;
+        border-radius: var(--rayon) var(--rayon) 0 0;
+        padding: 1.1rem 1.4rem;
+        border-bottom: 4px solid var(--jaune);
+    }
+    .quiz-entete h2 { font-size: 1.15rem; margin: 0; }
+
+    .quiz-progression {
+        background: #fff;
+        border: 1px solid var(--gris-bord);
+        border-top: none;
+        border-radius: 0 0 var(--rayon) var(--rayon);
+        padding: .8rem 1.1rem;
+        margin-bottom: 1.3rem;
+        position: sticky;
+        top: 70px;
+        z-index: 1020;
+        box-shadow: var(--ombre);
+    }
+    .quiz-progression .piste {
+        height: 8px; background: #e9edf5;
+        border-radius: 999px; overflow: hidden;
+    }
+    .quiz-progression .remplissage {
+        height: 100%; width: 0%;
+        background: var(--jaune);
+        border-radius: 999px;
+        transition: width .4s var(--ease);
+    }
+    .quiz-progression .compteur {
+        font-variant-numeric: tabular-nums;
+        font-weight: 700; color: var(--marine); font-size: .85rem;
+    }
+
+    .question {
+        background: #fff;
+        border: 1px solid var(--gris-bord);
+        border-radius: var(--rayon);
+        padding: 1.6rem;
+        box-shadow: var(--ombre);
+        animation: apparaitre .35s var(--ease) both;
+    }
+    .question[hidden] { display: none; }
+
+    .question .section-nom {
+        display: inline-block;
+        font-size: .72rem; font-weight: 700; letter-spacing: .08em;
+        text-transform: uppercase; color: var(--marine);
+        background: #eef2f9; border-radius: 999px;
+        padding: .3rem .75rem; margin-bottom: 1rem;
+    }
+    .question .etiquette-facultatif {
+        display: inline-block; font-size: .7rem; font-weight: 700;
+        color: var(--texte-doux); background: #f0f2f6;
+        border-radius: 999px; padding: .3rem .7rem; margin-left: .4rem;
+        margin-bottom: 1rem;
+    }
+    .question h3 {
+        font-size: clamp(1.1rem, 2.3vw, 1.45rem);
+        color: var(--marine);
+        margin-bottom: .5rem;
+        line-height: 1.35;
+    }
+    .question .aide { color: var(--texte-doux); font-size: .88rem; margin-bottom: 1.1rem; }
+
+    /* Options cliquables */
+    .options { display: grid; gap: .6rem; }
+    .option {
+        display: flex; align-items: center; gap: .8rem;
+        border: 1.5px solid var(--gris-bord);
+        border-radius: var(--rayon);
+        padding: .85rem 1rem;
+        cursor: pointer;
+        transition: border-color .2s var(--ease), background .2s var(--ease),
+                    transform .15s var(--ease);
+        margin: 0;
+        font-weight: 500;
+        color: var(--texte);
+    }
+    .option:hover { border-color: var(--marine-clair); background: #f8faff; transform: translateX(3px); }
+    /* On masque la puce native, remplacée par la pastille de droite. */
+    .option input[type="radio"],
+    .option input[type="checkbox"] { position: absolute; opacity: 0; pointer-events: none; }
+    .option .puce {
+        flex: 0 0 22px; height: 22px; border-radius: 50%;
+        border: 2px solid #c6cede; display: grid; place-items: center;
+        transition: border-color .2s var(--ease), background .2s var(--ease);
+    }
+    .option .puce i { opacity: 0; font-size: .8rem; color: var(--marine); transition: opacity .2s; }
+    .option.choisie { border-color: var(--marine); background: #f2f6ff; }
+    .option.choisie .puce { border-color: var(--jaune); background: var(--jaune); }
+    .option.choisie .puce i { opacity: 1; }
+    .option.verrouillee { opacity: .45; cursor: not-allowed; }
+
+    /* Note de 0 à 10 */
+    .note-bloc { text-align: center; padding: 1rem 0; }
+    .note-valeur {
+        font-family: 'Sora', sans-serif; font-size: 3rem; font-weight: 800;
+        color: var(--marine); line-height: 1;
+    }
+    .note-valeur small { font-size: 1rem; color: var(--texte-doux); }
+
+    /* Navigation */
+    .quiz-navigation {
+        display: flex; justify-content: space-between; align-items: center;
+        gap: 1rem; margin-top: 1.4rem;
+    }
+    .quiz-navigation .btn { min-width: 130px; }
+
+    /* Mode lecture seule : tout est affiché d'un coup */
+    .question.lecture { margin-bottom: 1rem; }
+    .reponse-figee {
+        background: #f7f9fd; border-left: 4px solid var(--jaune);
+        border-radius: .4rem; padding: .7rem .9rem; font-weight: 600;
+        color: var(--marine);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-8">
 
+        {% if lecture_seule %}
         <div class="entete-page">
-            <h2>Le questionnaire de compatibilité</h2>
+            <h2>Vos réponses</h2>
             <p class="mb-0 sous-titre">
-                Répondez honnêtement : c'est ce qui permettra de vous rapprocher
-                de la personne qui vous correspond le mieux.
+                {% if verrouille %}
+                    Elles sont enregistrées et définitivement figées.
+                {% else %}
+                    La période de réponse est terminée.
+                {% endif %}
             </p>
         </div>
 
         {% if verrouille %}
         <div class="alert alert-success">
             <i class="bi bi-check-circle-fill"></i>
-            <strong>Vos réponses sont enregistrées.</strong>
-            Elles ne peuvent plus être modifiées. En cas d'erreur, contactez l'équipe.
-        </div>
-        {% elif phase_fermee %}
-        <div class="alert alert-warning">
-            <i class="bi bi-lock-fill"></i>
-            <strong>La période de réponse est terminée.</strong>
-            Les questionnaires ne sont plus modifiables.
-        </div>
-        {% else %}
-        <div class="alert alert-warning">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            <strong>À lire avant de commencer :</strong> une fois envoyées, vos réponses
-            <strong>ne pourront plus être modifiées</strong>.
-        </div>
-
-        {# Barre de progression : se remplit à mesure que l'on répond. #}
-        <div class="barre-progression">
-            <div class="d-flex align-items-center gap-2">
-                <span class="small fw-semibold texte-marine text-nowrap">
-                    <span data-repondu>0</span>/15
-                </span>
-                <div class="piste flex-grow-1">
-                    <div class="remplissage" data-remplissage></div>
-                </div>
-            </div>
+            <strong>Questionnaire validé.</strong> Il n'est plus modifiable.
+            En cas d'erreur, contactez l'équipe d'organisation.
         </div>
         {% endif %}
 
-        <div class="carte mb-3 p-3">
-            <div class="d-flex justify-content-between flex-wrap gap-2 small texte-doux">
-                <span><strong class="texte-marine">1</strong> = Pas du tout</span>
-                <span><strong class="texte-marine">3</strong> = Neutre</span>
-                <span><strong class="texte-marine">5</strong> = Totalement</span>
-            </div>
-        </div>
-
-        <form method="post" novalidate>
-            {% csrf_token %}
-            <div class="carte">
-                <div class="p-4">
-                    {% for field in form %}
-                    <div class="mb-4 pb-3 question" style="{% if not forloop.last %}border-bottom: 1px solid var(--gris-bord);{% endif %}">
-                        <div class="d-flex gap-3">
-                            <div class="etape-num">{{ forloop.counter }}</div>
-                            <div class="flex-grow-1">
-                                <label class="mb-2" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.errors %}
-                                <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
+        <div class="carte p-4">
+            {% for question, field in form.paires %}
+            <div class="mb-4 pb-3"
+                 style="{% if not forloop.last %}border-bottom: 1px solid var(--gris-bord);{% endif %}">
+                <div class="d-flex gap-3">
+                    <div class="etape-num">{{ forloop.counter }}</div>
+                    <div class="flex-grow-1">
+                        <div class="small texte-doux mb-1">{{ question.section }}</div>
+                        <div class="fw-semibold texte-marine mb-2">{{ question.texte }}</div>
+                        {% for choix in field %}
+                            {% if choix.data.selected %}<div class="reponse-figee">{{ choix.choice_label }}</div>{% endif %}
+                        {% empty %}
+                            {% if field.data %}<div class="reponse-figee">{{ field.data }}</div>{% endif %}
+                        {% endfor %}
+                        {% if not field.data %}<div class="texte-doux small">— sans réponse —</div>{% endif %}
                     </div>
-                    {% endfor %}
                 </div>
             </div>
+            {% endfor %}
+        </div>
 
-            <div class="text-center mt-4">
-                {% if lecture_seule %}
-                    <a href="{% url 'dashboard' %}" class="btn btn-contour-marine">
-                        <i class="bi bi-arrow-left"></i> Retour à mon espace
-                    </a>
-                {% else %}
-                    <button type="submit" class="btn btn-jaune btn-lg px-5"
-                            onclick="return confirm('Confirmez-vous vos réponses ? Elles ne pourront plus être modifiées.');">
-                        <i class="bi bi-check2-circle"></i> Valider mes réponses
-                    </button>
+        <div class="text-center mt-4">
+            <a href="{% url 'dashboard' %}" class="btn btn-contour-marine">
+                <i class="bi bi-arrow-left"></i> Retour à mon espace
+            </a>
+        </div>
+
+        {% else %}
+
+        {# ---------------- Formulaire « une question à la fois » ---------- #}
+        <div class="quiz-entete">
+            <h2><i class="bi bi-stars"></i> Le questionnaire de compatibilité</h2>
+            <p class="mb-0 small" style="color: rgba(255,255,255,.82);">
+                Réponds franchement — c'est comme ça qu'on trouve la personne
+                qui te correspond vraiment.
+            </p>
+        </div>
+
+        <div class="quiz-progression">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="compteur" data-compteur>Question 1 / {{ form.paires|length }}</span>
+                <span class="compteur" data-repondues>0 répondues</span>
+            </div>
+            <div class="piste"><div class="remplissage" data-remplissage></div></div>
+        </div>
+
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Il manque des réponses.</strong>
+            Les questions incomplètes sont signalées ci-dessous.
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate id="formulaire-quiz">
+            {% csrf_token %}
+
+            {% for question, field in form.paires %}
+            <section class="question" data-code="{{ question.code }}"
+                     data-type="{{ question.type }}"
+                     data-facultatif="{% if question.facultatif %}1{% else %}0{% endif %}"
+                     {% if not forloop.first %}hidden{% endif %}>
+
+                <span class="section-nom">{{ question.section }}</span>
+                {% if question.facultatif %}
+                <span class="etiquette-facultatif">facultatif — tu peux passer</span>
                 {% endif %}
+
+                <h3>{{ question.texte }}</h3>
+                {% if question.aide %}<p class="aide">{{ question.aide }}</p>{% endif %}
+
+                {% if question.type == 'choix' %}
+                    <div class="options">
+                        {% for choix in field %}
+                        <label class="option" for="{{ choix.id_for_label }}">
+                            {{ choix.tag }}
+                            <span class="puce"><i class="bi bi-check-lg"></i></span>
+                            <span>{{ choix.choice_label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+
+                {% elif question.type == 'multi' %}
+                    <div class="options">
+                        {% for choix in field %}
+                        <label class="option option-multi" for="{{ choix.id_for_label }}">
+                            {{ choix.tag }}
+                            <span class="puce"><i class="bi bi-check-lg"></i></span>
+                            <span>{{ choix.choice_label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% if question.max_choix %}
+                    <p class="small texte-doux mt-2 mb-0"
+                       data-max="{{ question.max_choix }}">
+                        Maximum {{ question.max_choix }} choix.
+                    </p>
+                    {% endif %}
+
+                {% elif question.type == 'echelle' %}
+                    <div class="note-bloc">
+                        <div class="note-valeur"><span data-note-valeur>{{ field.value|default:5 }}</span><small>/10</small></div>
+                        <div class="px-2 mt-3">{{ field }}</div>
+                        <div class="d-flex justify-content-between small texte-doux px-2">
+                            <span>Pas du tout</span><span>À fond</span>
+                        </div>
+                    </div>
+
+                {% else %}
+                    {{ field }}
+                {% endif %}
+
+                {% if field.errors %}
+                <div class="text-danger small mt-2">{{ field.errors|striptags }}</div>
+                {% endif %}
+            </section>
+            {% endfor %}
+
+            <div class="quiz-navigation">
+                <button type="button" class="btn btn-contour-marine" data-precedent>
+                    <i class="bi bi-arrow-left"></i> Précédent
+                </button>
+                <span class="small texte-doux" data-indice-clavier>
+                    Astuce : tape <kbd>1</kbd>…<kbd>6</kbd> pour choisir
+                </span>
+                <button type="button" class="btn btn-marine" data-suivant>
+                    Suivant <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+
+            <div class="text-center mt-4" data-zone-fin hidden>
+                <div class="alert alert-warning text-start">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <strong>Dernière étape.</strong> Une fois validées, tes réponses
+                    <strong>ne pourront plus être modifiées</strong>.
+                </div>
+                <button type="submit" class="btn btn-jaune btn-lg px-5">
+                    <i class="bi bi-check2-circle"></i> Valider mes réponses
+                </button>
             </div>
         </form>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-{% if not lecture_seule and not verrouille and not phase_fermee %}
+{% if not lecture_seule %}
 <script>
-    // Progression : nombre de questions déjà répondues.
-    (function () {
-        const champs = document.querySelectorAll('select.quiz-select, select[id^="id_q"]');
-        const compteur = document.querySelector('[data-repondu]');
-        const barre = document.querySelector('[data-remplissage]');
-        if (!champs.length || !compteur || !barre) return;
+(function () {
+    const form = document.getElementById('formulaire-quiz');
+    if (!form) return;
 
-        function maj() {
-            let faits = 0;
-            champs.forEach(c => { if (c.value) faits++; });
-            compteur.textContent = faits;
-            barre.style.width = (faits / champs.length * 100) + '%';
+    const questions = Array.from(form.querySelectorAll('.question'));
+    const barre = form.querySelector('[data-remplissage]');
+    const compteur = form.querySelector('[data-compteur]');
+    const repondues = form.querySelector('[data-repondues]');
+    const btnPrec = form.querySelector('[data-precedent]');
+    const btnSuiv = form.querySelector('[data-suivant]');
+    const zoneFin = form.querySelector('[data-zone-fin]');
+    const indiceClavier = form.querySelector('[data-indice-clavier]');
+    let courante = 0;
+
+    /* ---------- Est-ce que la question a une réponse ? ---------- */
+    function estRepondue(section) {
+        const type = section.dataset.type;
+        if (type === 'multi') {
+            return section.querySelectorAll('input[type="checkbox"]:checked').length > 0;
         }
-        champs.forEach(c => c.addEventListener('change', maj));
-        maj();
-    })();
+        if (type === 'choix') {
+            return !!section.querySelector('input[type="radio"]:checked');
+        }
+        const champ = section.querySelector('input, textarea, select');
+        return !!(champ && champ.value.trim());
+    }
 
-    // Apparition en cascade des questions.
-    (function () {
-        document.querySelectorAll('.question').forEach((q, i) => {
-            q.classList.add('reveal');
-            q.style.transitionDelay = Math.min(i * 0.04, 0.5) + 's';
+    /* ---------- Rendu : bonnes options surlignées ---------- */
+    function rafraichirOptions() {
+        questions.forEach(section => {
+            if (section.dataset.type === 'multi') {
+                const max = parseInt(
+                    (section.querySelector('[data-max]') || {}).dataset?.max || '0', 10);
+                const cases = Array.from(section.querySelectorAll('input[type="checkbox"]'));
+                const cochees = cases.filter(c => c.checked);
+
+                cases.forEach(c => {
+                    const label = c.closest('.option');
+                    label.classList.toggle('choisie', c.checked);
+                    const bloque = max > 0 && !c.checked && cochees.length >= max;
+                    label.classList.toggle('verrouillee', bloque);
+                    c.disabled = bloque;
+                });
+            } else {
+                section.querySelectorAll('input[type="radio"]').forEach(r => {
+                    r.closest('.option').classList.toggle('choisie', r.checked);
+                });
+            }
         });
-        const obs = new IntersectionObserver((es) => {
-            es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
-        }, { threshold: .1, rootMargin: '0px 0px -30px 0px' });
-        document.querySelectorAll('.question').forEach(q => obs.observe(q));
-    })();
+    }
+
+    /* ---------- Barre de progression ---------- */
+    function rafraichirProgression() {
+        const requises = questions.filter(s => s.dataset.facultatif !== '1');
+        const faites = requises.filter(estRepondue).length;
+        const total = requises.length || 1;
+        barre.style.width = (faites / total * 100) + '%';
+        repondues.textContent = faites + ' / ' + total + ' répondues';
+    }
+
+    /* ---------- Navigation ---------- */
+    function afficher(index) {
+        courante = Math.max(0, Math.min(questions.length - 1, index));
+        questions.forEach((s, i) => { s.hidden = i !== courante; });
+
+        compteur.textContent = 'Question ' + (courante + 1) + ' / ' + questions.length;
+        btnPrec.disabled = courante === 0;
+        const derniere = courante === questions.length - 1;
+        btnSuiv.hidden = derniere;
+        zoneFin.hidden = !derniere;
+        indiceClavier.hidden = derniere;
+
+        // Le focus revient sur la question pour le clavier.
+        const section = questions[courante];
+        section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const premier = section.querySelector('input, textarea');
+        if (premier && section.dataset.type !== 'choix') premier.focus({ preventScroll: true });
+    }
+
+    function suivante() {
+        const section = questions[courante];
+        // Une question obligatoire sans réponse ne se saute pas.
+        if (section.dataset.facultatif !== '1' && !estRepondue(section)) {
+            section.animate(
+                [{ transform: 'translateX(0)' }, { transform: 'translateX(-8px)' },
+                 { transform: 'translateX(8px)' }, { transform: 'translateX(0)' }],
+                { duration: 260 });
+            const msg = section.querySelector('.text-danger');
+            return;
+        }
+        afficher(courante + 1);
+    }
+
+    /* ---------- Écouteurs ---------- */
+    form.addEventListener('change', (e) => {
+        rafraichirOptions();
+        rafraichirProgression();
+
+        const section = e.target.closest('.question');
+        if (!section) return;
+
+        // Pour une note, on met à jour l'affichage géant.
+        if (section.dataset.type === 'echelle') {
+            const valeur = section.querySelector('[data-note-valeur]');
+            if (valeur) {
+                valeur.textContent = e.target.value;
+                valeur.animate([{ transform: 'scale(1.25)' }, { transform: 'scale(1)' }],
+                               { duration: 220 });
+            }
+        }
+
+        // Choix unique : on avance tout seul, c'est plus fluide.
+        if (section.dataset.type === 'choix' && section.dataset.facultatif !== '1') {
+            setTimeout(() => {
+                if (estRepondue(section) && section === questions[courante]) {
+                    afficher(courante + 1);
+                }
+            }, 260);
+        }
+    });
+
+    form.addEventListener('input', (e) => {
+        if (e.target.type === 'range') {
+            const valeur = e.target.closest('.question').querySelector('[data-note-valeur]');
+            if (valeur) valeur.textContent = e.target.value;
+        }
+        rafraichirProgression();
+    });
+
+    btnSuiv.addEventListener('click', suivante);
+    btnPrec.addEventListener('click', () => afficher(courante - 1));
+
+    /* ---------- Clavier ---------- */
+    document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'TEXTAREA') return;
+        const section = questions[courante];
+        if (!section) return;
+
+        if (e.key >= '1' && e.key <= '9') {
+            const options = section.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+            const cible = options[parseInt(e.key, 10) - 1];
+            if (cible && !cible.disabled) {
+                if (cible.type === 'radio') cible.checked = true;
+                else cible.checked = !cible.checked;
+                cible.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        } else if (e.key === 'ArrowRight' || (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA')) {
+            if (zoneFin.hidden) { e.preventDefault(); suivante(); }
+        } else if (e.key === 'ArrowLeft') {
+            afficher(courante - 1);
+        }
+    });
+
+    /* ---------- Départ ---------- */
+    // Si des erreurs existent, on ouvre la première question concernée.
+    const enErreur = questions.find(s => s.querySelector('.text-danger'));
+    rafraichirOptions();
+    rafraichirProgression();
+    afficher(enErreur ? questions.indexOf(enErreur) : 0);
+})();
 </script>
 {% endif %}
 {% endblock %}

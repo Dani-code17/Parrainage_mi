@@ -62,25 +62,65 @@ Dans `/admin/` :
 - **Étudiants** — liste, sexe à vérifier, actions :
   *Générer les identifiants manquants*, *Régénérer les mots de passe*,
   *Exporter les identifiants (CSV)*, *Importer une liste d'étudiants (CSV)*.
-- **Réponses aux questionnaires** — voir les 15 réponses de chacun,
-  rechercher par identifiant, **exporter en CSV**.
+- **Réponses aux questionnaires** — voir les 25 réponses de chacun,
+  rechercher par identifiant, **exporter en CSV** (une colonne par question)
+  ou en **fiches profil détaillées** (question + réponse en clair, idéal pour
+  arbitrer à la main).
 - **Demandes** — accepter ou refuser les souhaits de binôme.
   La colonne « Forcé » n'existe **que** dans cet écran.
 - **Paramètre de l'événement** — changer de phase :
   *Verrouillage*, *Teasing*, **FORCER LA RÉVÉLATION**.
 
+## Le questionnaire
+
+**25 questions** réparties en 9 sections (toi en vrai, études, communication,
+sorties, valeurs, piment, questions qui révèlent, lifestyle, matching final),
+avec quatre types de réponse :
+
+| Type | Exemple | Compte dans le score |
+|---|---|---|
+| Choix unique | « Tu te décrirais comme… » | oui |
+| Choix multiples | « Tes centres d'intérêt » | oui |
+| Note de 0 à 10 | « Envie de créer un lien » | oui |
+| Texte libre | Q21, Q23, Q25 | **non** |
+
+- **7 questions facultatives** (alcool, tabac, religion, valeurs, red flag,
+  crush) : elles peuvent être passées sans bloquer la validation.
+- **La question 21 s'adapte au niveau** : un L1 lit « ce que tu attends de ton
+  parrain », un L3 lit « ce que tu peux apporter à ton filleul ». Chacun ne
+  voit qu'une seule version.
+- Le catalogue fait foi dans `parrainage/questions.py`. Les codes (`q1`…`q25`)
+  sont **stables** : ne jamais les réordonner, les réponses y sont rattachées.
+
 ## Le matching
 
 - **Éligibilité** : seuls les étudiants ayant répondu au questionnaire
   participent. Pas de réponse, pas de binôme.
-- **Score** : `quiz (70 %)` + `bonus mixte (30 %)`.
-  `score_quiz = (1 - écart_moyen / 4) × 70`. Le bonus mixte s'applique quand
-  les sexes diffèrent.
+- **Score** : `questionnaire (70 %)` + `bonus mixte (30 %)`.
+  - Le questionnaire est noté par **six sous-scores** : Personnalité, Études,
+    Social, Communication, Valeurs, Centres d'intérêt. Chaque dimension est
+    pondérée (les Valeurs pèsent le plus).
+  - Selon la question, on cherche la **similarité** (valeurs, centres
+    d'intérêt, rythme) ou la **complémentarité** (deux profils très réservés
+    se relancent difficilement).
+  - Une question sans réponse des deux côtés est **ignorée** : laisser une
+    question facultative vide ne pénalise pas.
+  - Le bonus mixte s'applique quand les sexes diffèrent.
+- **Réponses libres** : elles ne sont jamais notées.
+  - **Q21** (attentes / apport) et **Q23** (binôme idéal + deal-breaker)
+    servent de contexte à l'équipe, affiché dans l'admin.
+  - **Q25** est remise au binôme à la révélation, comme message de bienvenue.
 - **Capacité** : chaque L3 encadre **de 1 à 3 filleuls**. Le plafond est
   calculé automatiquement d'après le nombre d'étudiants, et l'algorithme
   garantit qu'aucun L3 actif ne reste sans filleul.
 - **Souhaits** : un souhait accepté par l'équipe rend le binôme prioritaire.
-  Il s'affiche alors **100/100**, sans aucune mention de priorité.
+  Il reçoit alors **son score naturel +1 à +4** (plafonné à 97), pour passer
+  devant sans afficher un 100/100 qui trahirait une intervention.
+
+> ⚙️ **Filtre deal-breaker** : désactivé par défaut
+> (`EXCLUSION_DEALBREAKER` dans `matching.py`). La Q15 demande ce que la
+> personne **déteste**, pas ce qu'elle **est** : exclure sur cette base
+> écarterait des gens qui sont d'accord entre eux.
 
 ## Anonymat
 

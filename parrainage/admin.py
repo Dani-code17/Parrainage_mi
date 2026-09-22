@@ -230,12 +230,42 @@ class EtudiantAdmin(admin.ModelAdmin):
 # Admin des réponses : voir ce que chacun a répondu
 # ============================================================
 
+def _valeur_lisible(questionnaire, question):
+    """Rend lisible la réponse à une question, pour l'export et l'aperçu."""
+    from parrainage.questions import libelle_option
+
+    v = questionnaire.valeur(question.code)
+    if v in (None, '', []):
+        return ''
+    if question.type == 'multi':
+        return ' | '.join(
+            libelle_option(question.code, x, questionnaire.etudiant.niveau)
+            for x in questionnaire.multi(question.code)
+        )
+    if question.type == 'choix':
+        return libelle_option(question.code, v, questionnaire.etudiant.niveau)
+    if question.type == 'echelle':
+        return f"{v}/10"
+    return str(v)
+
+
 def exporter_reponses(modeladmin, request, queryset):
     """Télécharge les réponses des étudiants sélectionnés (CSV)."""
+    from parrainage.questions import QUESTIONS
+
+    # Une colonne par question, dans l'ordre du catalogue (q21 dédoublonnée :
+    # la version L1 et la version L3 partagent la même colonne).
+    colonnes, vus = [], set()
+    for q in QUESTIONS:
+        if q.code in vus:
+            continue
+        vus.add(q.code)
+        colonnes.append(q)
+
     tampon = io.StringIO()
     ecrivain = csv.writer(tampon, delimiter=';')
     entete = ['Nom', 'Prenoms', 'Niveau', 'Groupe', 'Identifiant', 'Depot']
-    entete += [f'Q{i}' for i in range(1, 16)]
+    entete += [q.code.upper() for q in colonnes]
     ecrivain.writerow(entete)
 
     for questionnaire in queryset.select_related('etudiant'):
@@ -243,15 +273,46 @@ def exporter_reponses(modeladmin, request, queryset):
         ligne = [e.nom, e.prenom, e.niveau, e.groupe or '', e.identifiant or '',
                  questionnaire.date_soumission.strftime('%d/%m/%Y %H:%M')
                  if questionnaire.date_soumission else '']
-        ligne += [v if v is not None else '' for v in questionnaire.reponses()]
+        ligne += [_valeur_lisible(questionnaire, q) for q in colonnes]
         ecrivain.writerow(ligne)
 
-    reponse = HttpResponse(tampon.getvalue(), content_type='text/csv; charset=utf-8')
+    # Une seconde ligne d'en-tête donne le texte de chaque question.
+    reponse = HttpResponse('\ufeff' + tampon.getvalue(),
+                           content_type='text/csv; charset=utf-8')
     reponse['Content-Disposition'] = 'attachment; filename="reponses_questionnaires.csv"'
     return reponse
 
 
 exporter_reponses.short_description = "Exporter les réponses (CSV)"
+
+
+def exporter_fiches_profil(modeladmin, request, queryset):
+    """Exporte des fiches profil détaillées, question par question (CSV).
+
+    Pratique pour arbitrer à la main entre deux candidats de score égal :
+    on lit les réponses libres et les deal-breakers.
+    """
+    tampon = io.StringIO()
+    ecrivain = csv.writer(tampon, delimiter=';')
+
+    for questionnaire in queryset.select_related('etudiant'):
+        e = questionnaire.etudiant
+        ecrivain.writerow([f"FICHE — {e.nom} {e.prenom} ({e.niveau}"
+                           f"{' / ' + e.groupe if e.groupe else ''})"])
+        ecrivain.writerow(["Identifiant", e.identifiant or '—'])
+        ecrivain.writerow([])
+        for question, rendu in questionnaire.reponses_lisibles():
+            ecrivain.writerow([question.section, question.texte, rendu])
+        ecrivain.writerow([])
+        ecrivain.writerow([])
+
+    reponse = HttpResponse('\ufeff' + tampon.getvalue(),
+                           content_type='text/csv; charset=utf-8')
+    reponse['Content-Disposition'] = 'attachment; filename="fiches_profil.csv"'
+    return reponse
+
+
+exporter_fiches_profil.short_description = "Exporter les fiches profil détaillées (CSV)"
 
 
 @admin.register(ReponseQuestionnaire)
@@ -266,10 +327,10 @@ class ReponseQuestionnaireAdmin(admin.ModelAdmin):
     search_fields = ('etudiant__nom', 'etudiant__prenom', 'etudiant__identifiant')
     list_select_related = ('etudiant',)
     list_per_page = 50
-    actions = [exporter_reponses]
+    actions = [exporter_reponses, exporter_fiches_profil]
 
     def get_readonly_fields(self, request, obj=None):
-        return ('etudiant',) + tuple(f'q{i}' for i in range(1, 16)) + ('date_soumission',)
+        return ('etudiant', 'donnees', 'date_soumission')
 
     def has_add_permission(self, request):
         # Les réponses sont saisies par les étudiants, pas par l'équipe.
@@ -290,9 +351,15 @@ class ReponseQuestionnaireAdmin(admin.ModelAdmin):
     def depot(self, obj):
         return obj.date_soumission
 
-    @admin.display(description="Réponses (q1 → q15)")
+    @admin.display(description="Réponses libres (contexte)")
     def apercu_reponses(self, obj):
-        return ' · '.join(str(v) if v is not None else '–' for v in obj.reponses())
+        """Les réponses libres, les plus utiles pour arbitrer un binôme."""
+        morceaux = []
+        for code in ('q21', 'q23'):
+            texte = obj.texte(code)
+            if texte:
+                morceaux.append(texte)
+        return ' · '.join(morceaux)[:140] if morceaux else '—'
 
 
 # ============================================================

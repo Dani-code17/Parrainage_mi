@@ -1,12 +1,9 @@
-"""Génération de questionnaires de démonstration cohérents.
+"""Génération de questionnaires de démonstration cohérents (25 questions).
 
-Répondre au hasard produit des profils incohérents (quelqu'un qui répond 1 à
-« je préfère un parrain strict » et 1 à « je veux de l'aide »). Ici, chaque
-étudiant se voit attribuer un **profil de personnalité** parmi quelques
-archétypes plausibles, puis on ajoute une légère variation individuelle.
-
-Cela permet de tester le matching avec des données réalistes : les affinités
-entre profils produisent de vrais écarts de score.
+Répondre au hasard produit des profils incohérents (quelqu'un qui se dit
+« très introverti » et qui sort « dès qu'il y a un truc »). Ici, chaque
+étudiant reçoit un **archétype** plausible, puis une légère variation
+individuelle est appliquée.
 
 ⚠️ Ces réponses sont des données de DÉMONSTRATION : elles ne remplacent pas
 les vraies réponses des étudiants.
@@ -14,43 +11,99 @@ les vraies réponses des étudiants.
 
 import random
 
-# Ordre des 15 questions (voir ReponseQuestionnaire) :
-#  1 modèle de réussite   2 avouer ses lacunes    3 parrain strict
-#  4 aider sur ses points forts                    5 bons plans de la fac
-#  6 révisions en binôme                           7 café/discussion
-#  8 activités de groupe                           9 maturité des L3
-# 10 âge = atout                                  11 parler orientation
-# 12 sorties (5) / jeux tranquilles (1)           13 défi farfelu
-# 14 bibliothèque (1) / foyer (5)                 15 entraide = amitié
+# ---------------------------------------------------------------------
+#  Archétypes
+#
+#  Pour chaque code de question :
+#    - question à choix unique  -> l'indice de l'option (0 = première)
+#    - question à choix multiple -> la liste des indices cochés
+#    - note 0-10                -> la valeur
+#    - question libre           -> un texte d'exemple
+# ---------------------------------------------------------------------
 
-PROFILS = {
-    # Studieux et scolaire : veut un cadre, travaille en bibliothèque.
-    'studieux': [5, 4, 4, 5, 2, 5, 3, 2, 4, 3, 3, 2, 2, 1, 5],
-    # Sociable et festif : la relation humaine avant les révisions.
-    'sociable': [3, 3, 2, 4, 5, 4, 5, 5, 4, 5, 4, 5, 5, 5, 4],
-    # Équilibré : un peu de tout, sans extrême.
-    'equilibre': [4, 3, 3, 4, 4, 4, 4, 3, 4, 4, 4, 3, 4, 3, 4],
-    # Autonome : cherche un appui ponctuel, pas un mentor strict.
-    'autonome': [2, 3, 1, 4, 3, 3, 4, 3, 4, 4, 4, 4, 3, 3, 3],
-    # Aventurier : ouvert à tout, aime les défis.
-    'aventurier': [3, 4, 2, 5, 5, 4, 5, 4, 5, 5, 5, 5, 5, 4, 4],
-    # Réservé : préfère un cadre calme et des échanges en petit comité.
-    'reserve': [4, 2, 3, 3, 2, 3, 4, 2, 3, 2, 2, 1, 2, 2, 4],
-    # Mentor dans l'âme : veut transmettre et accompagner.
-    'mentor': [5, 5, 4, 5, 4, 5, 5, 3, 5, 4, 5, 3, 4, 3, 5],
-    # Pragmatique : l'efficacité avant le relationnel.
-    'pragmatique': [3, 4, 3, 4, 2, 5, 3, 2, 4, 3, 4, 3, 3, 2, 3],
+_ARCHETYPES = {
+    # Étudie sérieusement, structuré, plutôt réservé.
+    'studieux': {
+        'q1': 1, 'q2': 1, 'q3': 0, 'q4': 0, 'q5': 1, 'q6': 1, 'q7': 0,
+        'q8': 0, 'q9': 1, 'q10': 0, 'q11': 0, 'q12': 0, 'q13': 2,
+        'q14': [0, 1, 8], 'q15': 0, 'q16': 2, 'q17': 1, 'q18': 4,
+        'q19': [1, 4, 5, 12], 'q20': 0, 'q22': 1, 'q24': 8,
+        'q21': "J'aimerais être guidé sur la méthode de travail et la "
+               "préparation des partiels.",
+        'q23': "Quelqu'un de sérieux et fiable. Mon deal-breaker : le "
+               "mensonge.",
+        'q25': "Hâte de te rencontrer, j'ai plein de questions sur la L3 !",
+    },
+    # Très sociable, sort beaucoup, énergie communicative.
+    'sociable': {
+        'q1': 4, 'q2': 2, 'q3': 5, 'q4': 3, 'q5': 0, 'q6': 0, 'q7': 0,
+        'q8': 4, 'q9': 3, 'q10': 2, 'q11': 2, 'q12': 0, 'q13': 2,
+        'q14': [0, 10, 6], 'q15': 1, 'q16': 0, 'q17': 0, 'q18': 0,
+        'q19': [0, 1, 7, 14, 15], 'q20': 2, 'q22': 3, 'q24': 10,
+        'q21': "Je veux quelqu'un avec qui sortir et rigoler, mais aussi "
+               "qui me tire vers le haut.",
+        'q23': "Quelqu'un de vivant et ouvert. Deal-breaker : les gens "
+               "possessifs.",
+        'q25': "On va bien s'entendre, je le sens déjà 😄",
+    },
+    # Équilibré, s'adapte à tout.
+    'equilibre': {
+        'q1': 2, 'q2': 0, 'q3': 5, 'q4': 1, 'q5': 5, 'q6': 1, 'q7': 1,
+        'q8': 1, 'q9': 2, 'q10': 1, 'q11': 0, 'q12': 3, 'q13': 3,
+        'q14': [1, 6, 8], 'q15': 5, 'q16': 1, 'q17': 0, 'q18': 2,
+        'q19': [1, 2, 5, 9], 'q20': 3, 'q22': 5, 'q24': 7,
+        'q21': "Un peu de tout : des conseils, de la bonne humeur et des "
+               "moments simples.",
+        'q23': "Quelqu'un de respectueux et drôle. Deal-breaker : "
+               "l'irrespect.",
+        'q25': "À très vite, on va bien s'entendre !",
+    },
+    # Réservé, préfère les échanges en petit comité.
+    'reserve': {
+        'q1': 0, 'q2': 0, 'q3': 4, 'q4': 1, 'q5': 0, 'q6': 3, 'q7': 3,
+        'q8': 0, 'q9': 0, 'q10': 0, 'q11': 0, 'q12': 0, 'q13': 3,
+        'q14': [0, 3, 8], 'q15': 1, 'q16': 3, 'q17': 2, 'q18': 5,
+        'q19': [4, 5, 13], 'q20': 1, 'q22': 4, 'q24': 5,
+        'q21': "J'espère surtout une présence bienveillante et de la "
+               "patience, sans pression.",
+        'q23': "Quelqu'un de calme et sincère. Deal-breaker : les critiques "
+               "constantes.",
+        'q25': "Je suis timide, mais j'ai vraiment envie que ça marche.",
+    },
+    # Aventurier, ouvert à tout, aime les défis.
+    'aventurier': {
+        'q1': 3, 'q2': 2, 'q3': 3, 'q4': 2, 'q5': 3, 'q6': 1, 'q7': 0,
+        'q8': 2, 'q9': 3, 'q10': 2, 'q11': 1, 'q12': 3, 'q13': 2,
+        'q14': [2, 5, 9], 'q15': 3, 'q16': 0, 'q17': 3, 'q18': 1,
+        'q19': [0, 7, 9, 15], 'q20': 2, 'q22': 2, 'q24': 9,
+        'q21': "Quelqu'un qui me fasse découvrir des choses et me pousse "
+               "hors de ma zone de confort.",
+        'q23': "Quelqu'un d'ambitieux et libre. Deal-breaker : le manque "
+               "d'ambition.",
+        'q25': "Prêt(e) pour l'aventure, let's go 🚀",
+    },
+    # Mentor dans l'âme (surtout côté L3).
+    'mentor': {
+        'q1': 3, 'q2': 1, 'q3': 5, 'q4': 1, 'q5': 0, 'q6': 1, 'q7': 0,
+        'q8': 1, 'q9': 2, 'q10': 0, 'q11': 0, 'q12': 0, 'q13': 2,
+        'q14': [0, 1, 6], 'q15': 0, 'q16': 2, 'q17': 0, 'q18': 1,
+        'q19': [1, 5, 8, 11], 'q20': 0, 'q22': 1, 'q24': 9,
+        'q21': "Je veux transmettre ce que j'ai appris et éviter à mon "
+               "filleul les erreurs que j'ai faites.",
+        'q23': "Quelqu'un de curieux et respectueux. Deal-breaker : le "
+               "manque de loyauté.",
+        'q25': "Compte sur moi, je serai là quand ça comptera.",
+    },
 }
 
-# Répartition visée des profils (somme = 1.0).
+# Répartition visée des archétypes (somme = 1.0).
 _REPARTITION = {
-    'studieux': 0.14, 'sociable': 0.15, 'equilibre': 0.20, 'autonome': 0.13,
-    'aventurier': 0.11, 'reserve': 0.09, 'mentor': 0.10, 'pragmatique': 0.08,
+    'studieux': 0.18, 'sociable': 0.17, 'equilibre': 0.24,
+    'reserve': 0.13, 'aventurier': 0.14, 'mentor': 0.14,
 }
 
 
 def _choisir_profil(hasard):
-    """Tire un profil selon la répartition visée."""
     seuil = hasard.random()
     cumul = 0.0
     for profil, poids in _REPARTITION.items():
@@ -60,31 +113,58 @@ def _choisir_profil(hasard):
     return 'equilibre'
 
 
-def generer_reponses(graine=None, profil=None):
-    """Retourne une liste de 15 réponses (1-5) cohérentes.
+def generer_avec_profil(graine, niveau=None):
+    """Retourne ``(reponses, profil)`` pour la graine donnée.
 
-    - `graine` : graine aléatoire (pour obtenir des réponses reproductibles).
-    - `profil` : force un profil précis au lieu d'en tirer un.
+    ``reponses`` est un dictionnaire ``code -> valeur`` directement
+    compatible avec le champ ``donnees`` de ``ReponseQuestionnaire``.
     """
+    from parrainage.questions import QUESTIONS
+
     hasard = random.Random(graine)
-    nom_profil = profil if profil in PROFILS else _choisir_profil(hasard)
-    base = PROFILS[nom_profil]
+    profil = _choisir_profil(hasard)
+    base = _ARCHETYPES[profil]
 
-    reponses = []
-    for valeur in base:
-        # Bruit léger : -1, 0 ou +1, borné à [1, 5].
-        bruit = hasard.choice((-1, 0, 0, 0, 1))
-        reponses.append(max(1, min(5, valeur + bruit)))
+    reponses = {}
+    for question in QUESTIONS:
+        if question.condition and niveau and question.condition != niveau:
+            continue
+
+        valeur = base.get(question.code)
+        if valeur is None:
+            continue
+
+        if question.type == 'multi':
+            # On garde les choix de l'archétype, avec parfois un léger écart.
+            choisis = list(valeur)
+            if hasard.random() < 0.35 and len(question.options) > 3:
+                ajout = hasard.randrange(len(question.options))
+                if str(ajout) not in [str(x) for x in choisis]:
+                    choisis.append(ajout)
+            if question.max_choix:
+                choisis = choisis[:question.max_choix]
+            reponses[question.code] = [str(x) for x in sorted(set(choisis))]
+
+        elif question.type == 'echelle':
+            ecart = hasard.choice([-1, 0, 0, 0, 1])
+            reponses[question.code] = max(0, min(10, int(valeur) + ecart))
+
+        elif question.type == 'choix':
+            indice = int(valeur)
+            # Variation : deux étudiants du même archétype ne répondent pas
+            # exactement pareil.
+            if hasard.random() < 0.30:
+                indice += hasard.choice([-1, 1])
+            indice = max(0, min(len(question.options) - 1, indice))
+            reponses[question.code] = str(indice)
+
+        else:  # texte
+            reponses[question.code] = valeur
+
+    return reponses, profil
+
+
+def generer_reponses(graine, niveau=None):
+    """Comme :func:`generer_avec_profil`, sans le nom du profil."""
+    reponses, _ = generer_avec_profil(graine, niveau)
     return reponses
-
-
-def profil_de(reponses):
-    """Retrouve le profil le plus proche d'un jeu de réponses (indicatif)."""
-    if not reponses:
-        return None
-    meilleur, meilleure_distance = None, None
-    for nom, base in PROFILS.items():
-        distance = sum(abs(a - b) for a, b in zip(reponses, base))
-        if meilleure_distance is None or distance < meilleure_distance:
-            meilleur, meilleure_distance = nom, distance
-    return meilleur

@@ -95,32 +95,26 @@ class Etudiant(models.Model):
 
 
 class ReponseQuestionnaire(models.Model):
-    """Réponses d'un étudiant aux 15 questions du quiz de compatibilité."""
+    """Réponses d'un étudiant au questionnaire de compatibilité (25 questions).
 
-    ECHILLE_CHOICES = [(i, str(i)) for i in range(1, 6)]
+    Les réponses sont stockées dans un dictionnaire ``code -> valeur`` :
+
+    - ``choix``   : la valeur de l'option (chaîne)
+    - ``multi``   : la liste des valeurs cochées
+    - ``texte``   : la chaîne saisie
+    - ``echelle`` : un entier de 0 à 10
+
+    Ce format souple permet d'ajouter ou de modifier des questions sans
+    migration. Le catalogue fait foi : voir ``parrainage.questions``.
+    """
 
     etudiant = models.OneToOneField(
         Etudiant, on_delete=models.CASCADE, related_name='questionnaire'
     )
-    # 15 questions notées de 1 (Pas du tout) à 5 (Totalement).
-    # null=True permet de créer une ébauche avant soumission.
-    q1 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="Un bon parrain doit être un modèle de réussite scolaire.")
-    q2 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="J'avoue mes lacunes à un aîné pour qu'il m'aide.")
-    q3 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="Je préfère un parrain strict sur les révisions.")
-    q4 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="Je veux aider mon match sur mes points forts.")
-    q5 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="Mon parrain me fait découvrir les bons plans autour de la fac.")
-    q6 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="Je suis partant pour des révisions en binôme.")
-    q7 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="Une séance café/discussion me semble indispensable.")
-    q8 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="Je préfère les activités de groupe.")
-    q9 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="Les L3 apportent une maturité précieuse aux L1.")
-    q10 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="Les différences d'âge sont un atout.")
-    q11 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="Je suis à l'aise pour parler de mon orientation avec un L3.")
-    q12 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="Sorties improvisées (5) ou soirées jeux tranquilles (1).")
-    q13 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="Prêt à relever un défi farfelu si mon match me le lance.")
-    q14 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="Bibliothèque silencieuse (1) ou foyer bruyant (5).")
-    q15 = models.IntegerField(choices=ECHILLE_CHOICES, null=True, blank=True, verbose_name="Les amitiés naissent d'une entraide scolaire.")
-
+    donnees = models.JSONField(default=dict, blank=True)
     date_soumission = models.DateTimeField(auto_now=True)
+    # Une fois figé, le questionnaire n'est plus modifiable (verrouillage).
+    verrouille = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Réponse au questionnaire'
@@ -129,13 +123,82 @@ class ReponseQuestionnaire(models.Model):
     def __str__(self):
         return f"Questionnaire de {self.etudiant.nom_complet}"
 
-    def reponses(self):
-        """Retourne la liste ordonnée des 15 réponses."""
-        return [getattr(self, f"q{i}") for i in range(1, 16)]
+    # ------------------------------------------------------- Lecture
+    def valeur(self, code):
+        """Valeur brute d'une réponse, ou None si non répondue."""
+        return (self.donnees or {}).get(code)
+
+    def choix(self, code):
+        """Valeur d'une question à choix unique."""
+        v = self.valeur(code)
+        return v if isinstance(v, str) and v != '' else None
+
+    def multi(self, code):
+        """Liste des valeurs cochées pour une question à choix multiples."""
+        v = self.valeur(code)
+        if isinstance(v, list):
+            return [str(x) for x in v]
+        return []
+
+    def texte(self, code):
+        """Texte saisi, ou chaîne vide."""
+        v = self.valeur(code)
+        return v.strip() if isinstance(v, str) else ''
+
+    def nombre(self, code):
+        """Note entière, ou None."""
+        v = self.valeur(code)
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return None
+
+    # ------------------------------------------------------ Complétude
+    def reponses_manquantes(self):
+        """Codes des questions obligatoires non répondues pour ce niveau."""
+        from parrainage.questions import questions_pour
+
+        manquantes = []
+        for q in questions_pour(self.etudiant.niveau):
+            if q.facultatif:
+                continue
+            v = self.valeur(q.code)
+            vide = v in (None, '', [])
+            if vide:
+                manquantes.append(q.code)
+        return manquantes
 
     @property
     def est_complete(self):
-        return all(r is not None for r in self.reponses())
+        return not self.reponses_manquantes()
+
+    # ----------------------------------------------- Lecture « humaine »
+    def reponses_lisibles(self):
+        """Liste (question, libellé de la réponse) pour l'affichage.
+
+        Sert à l'admin et aux fiches profil : on montre le texte de la
+        question et un rendu lisible de la réponse.
+        """
+        from parrainage.questions import libelle_option, questions_pour
+
+        lignes = []
+        for q in questions_pour(self.etudiant.niveau):
+            v = self.valeur(q.code)
+            if v in (None, '', []):
+                rendu = '—'
+            elif q.type == 'multi':
+                rendu = ', '.join(
+                    libelle_option(q.code, x, self.etudiant.niveau)
+                    for x in self.multi(q.code)
+                )
+            elif q.type == 'choix':
+                rendu = libelle_option(q.code, v, self.etudiant.niveau)
+            elif q.type == 'echelle':
+                rendu = f"{v}/10"
+            else:
+                rendu = str(v)
+            lignes.append((q, rendu))
+        return lignes
 
 
 class DemandeForcage(models.Model):

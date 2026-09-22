@@ -118,7 +118,7 @@ def inscription_view(request):
 
 @login_required
 def quiz_view(request):
-    """Le questionnaire de 15 questions.
+    """Le questionnaire de 25 questions.
 
     Accessible tant que la phase est « inscription », **et** tant que les
     réponses n'ont pas été validées : ensuite le questionnaire est en
@@ -252,12 +252,32 @@ def dashboard(request):
     return render(request, 'parrainage/dashboard.html', context)
 
 
+def message_bienvenue(etudiant):
+    """Le message anonyme (Q25) laissé pour le futur binôme.
+
+    Il n'entre pas dans le score : c'est un cadeau de bienvenue, remis au
+    binôme une fois celui-ci créé.
+    """
+    questionnaire = getattr(etudiant, 'questionnaire', None)
+    return questionnaire.texte('q25') if questionnaire else ''
+
+
 def matchs_de(etudiant):
     """Tous les binômes d'un étudiant (plusieurs pour un L3, un seul pour un L1)."""
     if etudiant.est_L1:
         m = match_du_l1(etudiant)
-        return [m] if m else []
-    return matchs_du_l3(etudiant)
+        liste = [m] if m else []
+    else:
+        liste = matchs_du_l3(etudiant)
+
+    # On joint le message de bienvenue du partenaire à chaque binôme.
+    enrichis = []
+    for m in liste:
+        partenaire = m['l3'] if etudiant.est_L1 else m['l1']
+        enrichi = dict(m)
+        enrichi['message_partenaire'] = message_bienvenue(partenaire)
+        enrichis.append(enrichi)
+    return enrichis
 
 
 def mon_match(etudiant):
@@ -373,11 +393,13 @@ def revelation_view(request):
         entree['filleuls'].append({
             'l1': m['l1'],
             'score': score_affichable(m['score']),
+            'message': message_bienvenue(m['l1']),
         })
 
     liste = []
     for entree in groupes.values():
         entree['filleuls'].sort(key=lambda f: -f['score'])
+        entree['message'] = message_bienvenue(entree['l3'])
         scores = [f['score'] for f in entree['filleuls']]
         entree['score_moyen'] = round(sum(scores) / len(scores)) if scores else 0
         entree['nb_filleuls'] = len(scores)
