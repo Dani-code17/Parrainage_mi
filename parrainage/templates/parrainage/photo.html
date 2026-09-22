@@ -9,9 +9,22 @@
         <div class="entete-page text-center">
             <h2>Ma photo</h2>
             <p class="mb-0 sous-titre">
-                Elle apparaîtra sur l'écran de révélation, à côté de votre nom.
+                {% if etudiant.a_une_photo %}
+                    Elle apparaîtra sur l'écran de révélation, à côté de votre nom.
+                {% else %}
+                    <strong>Obligatoire pour continuer.</strong>
+                    Elle apparaîtra sur l'écran de révélation, à côté de votre nom.
+                {% endif %}
             </p>
         </div>
+
+        {% if not etudiant.a_une_photo and modifiable %}
+        <div class="alert alert-warning">
+            <i class="bi bi-camera-fill"></i>
+            <strong>Ajoutez votre photo pour accéder au questionnaire.</strong>
+            Choisissez une photo récente et reconnaissable.
+        </div>
+        {% endif %}
 
         <div class="carte carte-accent carte-halo p-4 reveal apparait">
 

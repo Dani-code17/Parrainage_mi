@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+from functools import wraps
 
 from .models import (
     Etudiant, ReponseQuestionnaire, ParametreEvenement, DemandeForcage
@@ -33,6 +34,34 @@ def get_etudiant(request):
         return request.user.etudiant
     except Etudiant.DoesNotExist:
         return None
+
+
+# ------------------------------------------------- Photo obligatoire
+
+def photo_obligatoire(view_func):
+    """Force l'étudiant à ajouter sa photo avant d'aller plus loin.
+
+    Dès qu'un étudiant connecté n'a pas de photo, il est redirigé vers la
+    page d'ajout : impossible d'accéder au questionnaire, à l'espace
+    personnel ou au mini-jeu tant que la photo manque.
+
+    La page photo elle-même, la déconnexion et l'administration ne sont pas
+    concernées.
+    """
+    @wraps(view_func)
+    def _enveloppe(request, *args, **kwargs):
+        etudiant = get_etudiant(request)
+        if etudiant and not etudiant.a_une_photo:
+            # Tant que la photo est acceptée, on y renvoie.
+            if parametres().phase_actuelle in PHASES_PHOTO_MODIFIABLE:
+                messages.info(
+                    request,
+                    "Ajoutez votre photo pour continuer : elle apparaîtra "
+                    "sur l'écran de révélation."
+                )
+                return redirect('photo')
+        return view_func(request, *args, **kwargs)
+    return _enveloppe
 
 
 def verifier_phase(phase_requise):
@@ -117,6 +146,7 @@ def inscription_view(request):
 
 
 @login_required
+@photo_obligatoire
 def quiz_view(request):
     """Le questionnaire de 25 questions.
 
@@ -208,6 +238,7 @@ def deconnexion_view(request):
 # ---------------------------------------------------------------- Dashboard (connecté)
 
 @login_required
+@photo_obligatoire
 def dashboard(request):
     """Espace personnel selon la phase et le profil."""
     etudiant = get_etudiant(request)
@@ -287,6 +318,7 @@ def mon_match(etudiant):
 
 
 @login_required
+@photo_obligatoire
 def teasing_view(request):
     """Page teasing : indices sur ses binômes, noms masqués."""
     etudiant = get_etudiant(request)
@@ -313,6 +345,7 @@ def teasing_view(request):
 
 
 @login_required
+@photo_obligatoire
 def mini_jeu(request):
     """Page du dé virtuel de la compatibilité."""
     etudiant = get_etudiant(request)
@@ -373,6 +406,7 @@ def photo_view(request):
 # ---------------------------------------------------------------- Révélation publique
 
 @login_required
+@photo_obligatoire
 def revelation_view(request):
     """Écran de projection : tous les binômes publics avec score 0-100.
 

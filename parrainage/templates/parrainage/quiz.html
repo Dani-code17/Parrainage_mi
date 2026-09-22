@@ -304,6 +304,8 @@
     if (!form) return;
 
     const questions = Array.from(form.querySelectorAll('.question'));
+    if (!questions.length) return;
+
     const barre = form.querySelector('[data-remplissage]');
     const compteur = form.querySelector('[data-compteur]');
     const repondues = form.querySelector('[data-repondues]');
@@ -313,80 +315,110 @@
     const indiceClavier = form.querySelector('[data-indice-clavier]');
     let courante = 0;
 
+    /* Une question est « facultative » si son attribut vaut exactement 1.
+       On lit l'attribut avec getAttribute : plus fiable que dataset quand
+       la valeur est produite par le gabarit. */
+    function estFacultative(section) {
+        return section.getAttribute('data-facultatif') === '1';
+    }
+
+    function typeDe(section) {
+        return section.getAttribute('data-type');
+    }
+
     /* ---------- Est-ce que la question a une réponse ? ---------- */
     function estRepondue(section) {
-        const type = section.dataset.type;
+        const type = typeDe(section);
         if (type === 'multi') {
             return section.querySelectorAll('input[type="checkbox"]:checked').length > 0;
         }
         if (type === 'choix') {
             return !!section.querySelector('input[type="radio"]:checked');
         }
-        const champ = section.querySelector('input, textarea, select');
-        return !!(champ && champ.value.trim());
+        if (type === 'echelle') {
+            const champ = section.querySelector('input[type="range"]');
+            return !!(champ && String(champ.value).trim() !== '');
+        }
+        const champ = section.querySelector('textarea, input[type="text"], input:not([type])');
+        return !!(champ && champ.value.trim() !== '');
     }
 
-    /* ---------- Rendu : bonnes options surlignées ---------- */
+    /* ---------- Rendu : options surlignées ---------- */
     function rafraichirOptions() {
         questions.forEach(section => {
-            if (section.dataset.type === 'multi') {
-                const max = parseInt(
-                    (section.querySelector('[data-max]') || {}).dataset?.max || '0', 10);
+            if (typeDe(section) === 'multi') {
+                const bloc = section.querySelector('[data-max]');
+                const max = bloc ? parseInt(bloc.getAttribute('data-max'), 10) || 0 : 0;
                 const cases = Array.from(section.querySelectorAll('input[type="checkbox"]'));
                 const cochees = cases.filter(c => c.checked);
 
                 cases.forEach(c => {
                     const label = c.closest('.option');
-                    label.classList.toggle('choisie', c.checked);
+                    if (label) label.classList.toggle('choisie', c.checked);
                     const bloque = max > 0 && !c.checked && cochees.length >= max;
-                    label.classList.toggle('verrouillee', bloque);
+                    if (label) label.classList.toggle('verrouillee', bloque);
                     c.disabled = bloque;
                 });
             } else {
                 section.querySelectorAll('input[type="radio"]').forEach(r => {
-                    r.closest('.option').classList.toggle('choisie', r.checked);
+                    const label = r.closest('.option');
+                    if (label) label.classList.toggle('choisie', r.checked);
                 });
             }
         });
     }
 
-    /* ---------- Barre de progression ---------- */
+    /* ---------- Compteur de progression ---------- */
     function rafraichirProgression() {
-        const requises = questions.filter(s => s.dataset.facultatif !== '1');
-        const faites = requises.filter(estRepondue).length;
-        const total = requises.length || 1;
-        barre.style.width = (faites / total * 100) + '%';
-        repondues.textContent = faites + ' / ' + total + ' répondues';
+        const faites = questions.filter(estRepondue).length;
+        const total = questions.length;
+        if (barre) barre.style.width = (faites / total * 100) + '%';
+        if (repondues) repondues.textContent = faites + ' / ' + total + ' répondues';
     }
 
     /* ---------- Navigation ---------- */
     function afficher(index) {
         courante = Math.max(0, Math.min(questions.length - 1, index));
-        questions.forEach((s, i) => { s.hidden = i !== courante; });
 
-        compteur.textContent = 'Question ' + (courante + 1) + ' / ' + questions.length;
-        btnPrec.disabled = courante === 0;
+        questions.forEach((s, i) => {
+            if (i === courante) {
+                s.removeAttribute('hidden');
+            } else {
+                s.setAttribute('hidden', '');
+            }
+        });
+
+        if (compteur) {
+            compteur.textContent = 'Question ' + (courante + 1) + ' / ' + questions.length;
+        }
+        if (btnPrec) btnPrec.disabled = courante === 0;
+
         const derniere = courante === questions.length - 1;
-        btnSuiv.hidden = derniere;
-        zoneFin.hidden = !derniere;
-        indiceClavier.hidden = derniere;
+        if (btnSuiv) btnSuiv.hidden = derniere;
+        if (zoneFin) zoneFin.hidden = !derniere;
+        if (indiceClavier) indiceClavier.hidden = derniere;
 
-        // Le focus revient sur la question pour le clavier.
         const section = questions[courante];
         section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        const premier = section.querySelector('input, textarea');
-        if (premier && section.dataset.type !== 'choix') premier.focus({ preventScroll: true });
+
+        const premier = section.querySelector('textarea, input[type="range"], input:not([type="radio"]):not([type="checkbox"])');
+        if (premier && typeDe(section) !== 'choix') {
+            premier.focus({ preventScroll: true });
+        }
+        rafraichirProgression();
     }
 
+    /* ---------- Passer à la suite ---------- */
     function suivante() {
         const section = questions[courante];
-        // Une question obligatoire sans réponse ne se saute pas.
-        if (section.dataset.facultatif !== '1' && !estRepondue(section)) {
+
+        if (!estFacultative(section) && !estRepondue(section)) {
+            // On signale visuellement la question bloquante.
             section.animate(
                 [{ transform: 'translateX(0)' }, { transform: 'translateX(-8px)' },
                  { transform: 'translateX(8px)' }, { transform: 'translateX(0)' }],
-                { duration: 260 });
-            const msg = section.querySelector('.text-danger');
+                { duration: 280 });
+            section.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
         afficher(courante + 1);
@@ -400,36 +432,40 @@
         const section = e.target.closest('.question');
         if (!section) return;
 
-        // Pour une note, on met à jour l'affichage géant.
-        if (section.dataset.type === 'echelle') {
+        if (typeDe(section) === 'echelle') {
             const valeur = section.querySelector('[data-note-valeur]');
             if (valeur) {
                 valeur.textContent = e.target.value;
-                valeur.animate([{ transform: 'scale(1.25)' }, { transform: 'scale(1)' }],
-                               { duration: 220 });
+                if (valeur.animate) {
+                    valeur.animate([{ transform: 'scale(1.25)' }, { transform: 'scale(1)' }],
+                                   { duration: 220 });
+                }
             }
         }
 
-        // Choix unique : on avance tout seul, c'est plus fluide.
-        if (section.dataset.type === 'choix' && section.dataset.facultatif !== '1') {
+        // Un choix unique fait avancer tout seul, sauf à la dernière question.
+        if (typeDe(section) === 'choix'
+            && section === questions[courante]
+            && courante < questions.length - 1) {
             setTimeout(() => {
                 if (estRepondue(section) && section === questions[courante]) {
                     afficher(courante + 1);
                 }
-            }, 260);
+            }, 250);
         }
     });
 
     form.addEventListener('input', (e) => {
         if (e.target.type === 'range') {
-            const valeur = e.target.closest('.question').querySelector('[data-note-valeur]');
+            const section = e.target.closest('.question');
+            const valeur = section && section.querySelector('[data-note-valeur]');
             if (valeur) valeur.textContent = e.target.value;
         }
         rafraichirProgression();
     });
 
-    btnSuiv.addEventListener('click', suivante);
-    btnPrec.addEventListener('click', () => afficher(courante - 1));
+    if (btnSuiv) btnSuiv.addEventListener('click', suivante);
+    if (btnPrec) btnPrec.addEventListener('click', () => afficher(courante - 1));
 
     /* ---------- Clavier ---------- */
     document.addEventListener('keydown', (e) => {
@@ -445,15 +481,15 @@
                 else cible.checked = !cible.checked;
                 cible.dispatchEvent(new Event('change', { bubbles: true }));
             }
-        } else if (e.key === 'ArrowRight' || (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA')) {
-            if (zoneFin.hidden) { e.preventDefault(); suivante(); }
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            if (courante < questions.length - 1) suivante();
         } else if (e.key === 'ArrowLeft') {
             afficher(courante - 1);
         }
     });
 
     /* ---------- Départ ---------- */
-    // Si des erreurs existent, on ouvre la première question concernée.
     const enErreur = questions.find(s => s.querySelector('.text-danger'));
     rafraichirOptions();
     rafraichirProgression();

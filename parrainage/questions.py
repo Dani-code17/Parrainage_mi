@@ -331,8 +331,10 @@ QUESTIONS = [
         'q23', _SECTION_9,
         "En une phrase : ton binôme idéal, c'est qui — et ton deal-breaker "
         "absolu ?", TYPE_TEXTE,
-        aide="Ton deal-breaker sert à éviter les binômes qui te "
-             "correspondent mal.",
+        aide="Ton binôme idéal (le genre de personne avec qui tu t'entendrais) "
+             "et ton deal-breaker : le défaut que tu ne pourrais PAS supporter "
+             "chez quelqu'un (ex. la malhonnêteté, le manque de respect…). "
+             "Cette réponse sert à éviter les binômes qui te correspondent mal.",
     ),
     Question(
         'q24', _SECTION_9,

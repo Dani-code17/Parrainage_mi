@@ -257,17 +257,38 @@ class PhotoForm(forms.ModelForm):
         photo = self.cleaned_data.get('photo')
         if not photo:
             return photo
+
         # 5 Mo maximum
         if photo.size > 5 * 1024 * 1024:
-            raise forms.ValidationError("La photo ne doit pas dépasser 5 Mo.")
-        # Formats d'image acceptés
-        import imghdr
-        try:
-            type_detecte = imghdr.what(photo)
-        except Exception:
-            type_detecte = None
-        if type_detecte not in ('jpeg', 'png', 'gif', 'webp', 'bmp'):
             raise forms.ValidationError(
-                "Le fichier doit être une image (JPG, PNG, GIF ou WEBP)."
+                "La photo ne doit pas dépasser 5 Mo. "
+                "Réduisez-la ou choisissez-en une autre."
+            )
+
+        # On vérifie le type en lisant les premiers octets du fichier, sans
+        # dépendre de `imghdr` (supprimé à partir de Python 3.13).
+        signatures = {
+            b'\xff\xd8\xff': 'JPEG',
+            b'\x89PNG\r\n\x1a\n': 'PNG',
+            b'GIF87a': 'GIF',
+            b'GIF89a': 'GIF',
+            b'BM': 'BMP',
+        }
+        try:
+            photo.seek(0)
+            entete = photo.read(16)
+            photo.seek(0)
+        except Exception:
+            entete = b''
+
+        reconnu = any(entete.startswith(sig) for sig in signatures)
+        # WEBP : conteneur RIFF, avec « WEBP » aux octets 8 à 12.
+        if not reconnu and entete[:4] == b'RIFF' and entete[8:12] == b'WEBP':
+            reconnu = True
+
+        if not reconnu:
+            raise forms.ValidationError(
+                "Ce fichier n'est pas une image reconnue. "
+                "Formats acceptés : JPG, PNG, GIF, WEBP ou BMP."
             )
         return photo

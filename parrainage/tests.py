@@ -10,6 +10,8 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
+import io
+
 from io import StringIO
 
 from parrainage import questions as catalogue
@@ -54,6 +56,18 @@ def creer_quiz(etudiant, donnees=None, valide=True):
         etudiant.a_valide_questionnaire = True
         etudiant.save(update_fields=['a_valide_questionnaire'])
     return questionnaire
+
+
+def ajouter_photo(etudiant, nom='photo.jpg'):
+    """Attache une vraie image à un étudiant (la photo est obligatoire)."""
+    from PIL import Image
+
+    tampon = io.BytesIO()
+    Image.new('RGB', (60, 60), (1, 47, 107)).save(tampon, 'JPEG')
+    etudiant.photo.save(
+        nom, SimpleUploadedFile(nom, tampon.getvalue(), content_type='image/jpeg'),
+        save=True)
+    return etudiant
 
 
 # =====================================================================
@@ -407,6 +421,9 @@ class ParcoursTests(TestCase):
             email='l1@x.fr', niveau='L1', sexe='G', identifiant='l.roux')
         self.l3 = creer_etudiant(
             email='l3@x.fr', niveau='L3', sexe='F', identifiant='a.marchand')
+        # La photo est obligatoire : on la pose pour ne pas être redirigé.
+        ajouter_photo(self.l1, 'l1.jpg')
+        ajouter_photo(self.l3, 'l3.jpg')
         self.l1.user.set_password('MotDePasse1')
         self.l1.user.save()
 
@@ -614,3 +631,53 @@ class RemplirQuestionnairesTests(TestCase):
         call_command('remplir_questionnaires', '--reset', stdout=StringIO())
         second = ReponseQuestionnaire.objects.get(etudiant=etudiant).donnees
         self.assertEqual(premier, second)
+
+
+# =====================================================================
+#  Photo obligatoire
+# =====================================================================
+
+class PhotoObligatoireTests(TestCase):
+    """Sans photo, l'étudiant est redirigé vers la page d'ajout."""
+
+    def setUp(self):
+        ParametreEvenement.obtenir()
+        self.etudiant = creer_etudiant(
+            email='sans@x.fr', niveau='L1', identifiant='s.photo')
+        self.etudiant.user.set_password('MotDePasse1')
+        self.etudiant.user.save()
+        self.client.login(username='s.photo', password='MotDePasse1')
+
+    def test_pages_bloquees_sans_photo(self):
+        for nom in ('dashboard', 'quiz', 'mini_jeu'):
+            reponse = self.client.get(reverse(nom))
+            self.assertEqual(reponse.status_code, 302, nom)
+            self.assertTrue(reponse.url.endswith('/ma-photo/'), nom)
+
+    def test_page_photo_reste_accessible(self):
+        self.assertEqual(self.client.get(reverse('photo')).status_code, 200)
+
+    def test_acces_debloque_apres_ajout(self):
+        ajouter_photo(self.etudiant)
+        for nom in ('dashboard', 'quiz'):
+            self.assertEqual(self.client.get(reverse(nom)).status_code, 200, nom)
+
+    def test_image_valide_acceptee(self):
+        from PIL import Image
+        tampon = io.BytesIO()
+        Image.new('RGB', (80, 80), (255, 199, 44)).save(tampon, 'PNG')
+        envoi = SimpleUploadedFile('moi.png', tampon.getvalue(),
+                                   content_type='image/png')
+        reponse = self.client.post(reverse('photo'), {'photo': envoi})
+        self.assertEqual(reponse.status_code, 302)
+        self.etudiant.refresh_from_db()
+        self.assertTrue(self.etudiant.a_une_photo)
+
+    def test_fichier_non_image_refuse_sans_erreur_serveur(self):
+        """Un faux fichier doit être refusé proprement (pas de 500)."""
+        faux = SimpleUploadedFile('virus.txt', b'pas une image',
+                                  content_type='text/plain')
+        reponse = self.client.post(reverse('photo'), {'photo': faux})
+        self.assertEqual(reponse.status_code, 200)
+        self.etudiant.refresh_from_db()
+        self.assertFalse(self.etudiant.a_une_photo)
