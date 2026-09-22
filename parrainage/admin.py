@@ -101,51 +101,62 @@ importer_liste_blanche.short_description = "Importer une liste d'étudiants (CSV
 # Actions : identifiants
 # ============================================================
 
-def generer_identifiants(modeladmin, request, queryset):
-    """Crée les identifiants et mots de passe des étudiants sélectionnés."""
-    resultats = creer_comptes(list(queryset), reinitialiser=False)
-    crees = [r for r in resultats if r['cree']]
-    messages.success(
-        request,
-        f"{len(crees)} identifiant(s) généré(s) sur {len(resultats)} étudiant(s). "
-        "Utilisez « Exporter les identifiants (CSV) » pour récupérer la liste."
-    )
+def generer_et_exporter_identifiants(modeladmin, request, queryset):
+    """Crée les identifiants manquants **et** télécharge le CSV.
 
+    Les comptes déjà existants sont conservés tels quels (leur mot de passe
+    reste inchangé, donc non affichable) ; les nouveaux reçoivent un mot de
+    passe, présent dans le fichier.
 
-generer_identifiants.short_description = "Générer les identifiants manquants"
-
-
-def regenerer_mots_de_passe(modeladmin, request, queryset):
-    """Attribue un nouveau mot de passe aux étudiants sélectionnés."""
-    resultats = creer_comptes(list(queryset), reinitialiser=True)
-    messages.success(
-        request,
-        f"{len(resultats)} mot(s) de passe régénéré(s). "
-        "Utilisez « Exporter les identifiants (CSV) » pour récupérer la liste."
-    )
-
-
-regenerer_mots_de_passe.short_description = "Régénérer les mots de passe"
-
-
-def exporter_identifiants(modeladmin, request, queryset):
-    """Télécharge un CSV avec nom, identifiant et mot de passe.
-
-    ⚠️ Les mots de passe ne sont affichés qu'une fois, à la création : cette
-    action exporte les identifiants et, pour les comptes qui viennent d'être
-    créés, le mot de passe en clair. Pour un compte existant dont le mot de
-    passe a déjà été distribué, la colonne indique « (inchangé) » — utilisez
-    « Régénérer les mots de passe » avant d'exporter.
+    Pour obtenir un fichier avec **tous** les mots de passe, utilisez plutôt
+    « Régénérer les mots de passe et exporter ».
     """
     resultats = creer_comptes(list(queryset), reinitialiser=False)
+    nouveaux = sum(1 for r in resultats if r['mot_de_passe'])
+    if nouveaux:
+        messages.success(request, f"{nouveaux} nouveau(x) compte(s) créé(s).")
+    else:
+        messages.info(
+            request,
+            "Aucun nouveau compte : les mots de passe existants ne peuvent "
+            "pas être réaffichés. Utilisez « Régénérer les mots de passe et "
+            "exporter » pour obtenir un fichier complet."
+        )
 
-    contenu = exporter_csv(resultats)
-    reponse = HttpResponse(contenu, content_type='text/csv; charset=utf-8')
+    reponse = HttpResponse(exporter_csv(resultats),
+                           content_type='text/csv; charset=utf-8')
     reponse['Content-Disposition'] = 'attachment; filename="identifiants.csv"'
     return reponse
 
 
-exporter_identifiants.short_description = "Exporter les identifiants (CSV)"
+generer_et_exporter_identifiants.short_description = (
+    "Générer les identifiants et exporter (CSV)")
+
+
+def regenerer_et_exporter_identifiants(modeladmin, request, queryset):
+    """Attribue de nouveaux mots de passe **et** télécharge le CSV complet.
+
+    C'est la seule façon d'obtenir un fichier où **toutes** les lignes
+    portent un mot de passe : Django n'enregistre qu'une empreinte, donc un
+    mot de passe existant ne peut jamais être réaffiché.
+
+    ⚠️ Les mots de passe précédents de ces comptes deviennent invalides.
+    """
+    resultats = creer_comptes(list(queryset), reinitialiser=True)
+    messages.success(
+        request,
+        f"{len(resultats)} mot(s) de passe régénéré(s). "
+        "Les anciens ne fonctionnent plus."
+    )
+
+    reponse = HttpResponse(exporter_csv(resultats),
+                           content_type='text/csv; charset=utf-8')
+    reponse['Content-Disposition'] = 'attachment; filename="identifiants.csv"'
+    return reponse
+
+
+regenerer_et_exporter_identifiants.short_description = (
+    "Régénérer les mots de passe ET exporter (CSV)")
 
 
 # ============================================================
@@ -192,8 +203,8 @@ class EtudiantAdmin(admin.ModelAdmin):
     list_filter = ('niveau', 'groupe', 'sexe', 'sexe_deduit',
                    'a_valide_questionnaire', 'est_eligible')
     search_fields = ('nom', 'prenom', 'identifiant', 'email')
-    actions = [importer_liste_blanche, generer_identifiants,
-               regenerer_mots_de_passe, exporter_identifiants]
+    actions = [importer_liste_blanche, generer_et_exporter_identifiants,
+               regenerer_et_exporter_identifiants]
     list_per_page = 50
 
     fieldsets = (

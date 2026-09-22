@@ -218,10 +218,14 @@ STATIC_URL = 'static/'
 # Dossier où `collectstatic` rassemble les fichiers pour le serveur web.
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 # WhiteNoise compresse et met en cache les fichiers statiques.
+#
+# On utilise le stockage *sans manifeste* : le manifeste obligerait à lancer
+# `collectstatic` avant toute exécution, y compris pendant les tests, ce qui
+# les ferait échouer. La compression et la mise en cache restent actives.
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
     'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
     },
 }
 
