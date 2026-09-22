@@ -112,14 +112,22 @@ scp utilisateur@serveur:/var/www/parrainage/identifiants.csv .
 
 ---
 
-## 6. Lancer le serveur
+## 6. Lancer le serveur en permanent (IP, port 80, Nginx)
+
+Objectif : le site répond sur **http://51.222.205.47** (sans `:8000`), tourne
+même quand vous fermez la session SSH, et reste rapide.
+
+### a) Gunicorn en service systemd
+
+Le serveur de développement (`runserver`) s'arrête dès que le terminal se
+ferme. On le remplace par Gunicorn, lancé par systemd.
+
+Adaptez les chemins (`/home/ubuntu51/parrainage`) et l'utilisateur
+(`ubuntu51`) à votre serveur :
 
 ```bash
-gunicorn config.wsgi:application --config gunicorn.conf.py
+sudo nano /etc/systemd/system/parrainage.service
 ```
-
-Pour qu'il tourne en permanence, créez un service systemd
-(`/etc/systemd/system/parrainage.service`) :
 
 ```ini
 [Unit]
@@ -127,45 +135,174 @@ Description=Parrainage MIAGE
 After=network.target
 
 [Service]
-User=www-data
-WorkingDirectory=/var/www/parrainage
-EnvironmentFile=/var/www/parrainage/.env
-ExecStart=/var/www/parrainage/venv/bin/gunicorn config.wsgi:application --config gunicorn.conf.py
+User=ubuntu51
+Group=www-data
+WorkingDirectory=/home/ubuntu51/parrainage
+EnvironmentFile=/home/ubuntu51/parrainage/.env
+ExecStart=/home/ubuntu51/parrainage/venv/bin/gunicorn config.wsgi:application --config gunicorn.conf.py
 Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
 ```
 
+Puis :
+
 ```bash
+sudo systemctl daemon-reload
 sudo systemctl enable --now parrainage
+sudo systemctl status parrainage
 ```
 
-Placez ensuite **Nginx** devant, pour le domaine et le HTTPS :
+> Le service doit afficher **`active (running)`**. S'il échoue :
+> `sudo journalctl -u parrainage -n 40` montre la cause.
+
+### b) Nginx devant Gunicorn
+
+```bash
+sudo apt install -y nginx
+sudo nano /etc/nginx/sites-available/parrainage
+```
 
 ```nginx
 server {
-    listen 80;
-    server_name parrainage.mon-ecole.ci;
+    listen 80 default_server;
+    server_name 51.222.205.47;
 
-    location /static/ { alias /var/www/parrainage/staticfiles/; }
-    location /media/  { alias /var/www/parrainage/media/; }
+    # Taille des photos de profil
+    client_max_body_size 10M;
+
+    # Fichiers statiques servis directement par Nginx (rapide)
+    location /static/ {
+        alias /home/ubuntu51/parrainage/staticfiles/;
+        expires 30d;
+        access_log off;
+    }
+
+    location /media/ {
+        alias /home/ubuntu51/parrainage/media/;
+        expires 7d;
+    }
 
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        client_max_body_size 10M;   # photos de profil
+        proxy_read_timeout 60s;
     }
 }
 ```
 
-Puis HTTPS gratuit :
+Activez le site et rechargez :
 
 ```bash
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d parrainage.mon-ecole.ci
+sudo ln -sf /etc/nginx/sites-available/parrainage /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t                      # doit dire « syntax is ok »
+sudo systemctl reload nginx
 ```
+
+### c) Ouvrir le port 80
+
+```bash
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow OpenSSH
+
+# Le port 8000 n'est plus utile de l'extérieur : Nginx passe par la boucle locale.
+sudo ufw delete allow 8000/tcp 2>/dev/null
+
+sudo ufw status
+```
+
+### d) Adapter la configuration Django
+
+Nginx sert le site sur le port 80 : la redirection HTTPS doit rester
+désactivée (pas encore de certificat).
+
+```bash
+cd ~/parrainage && nano .env
+```
+
+Vérifiez que ces deux lignes sont présentes :
+
+```ini
+DJANGO_HTTPS=0
+DJANGO_SSL_REDIRECT=0
+```
+
+Puis redémarrez :
+
+```bash
+sudo systemctl restart parrainage
+```
+
+Le site est maintenant sur **http://51.222.205.47** — sans `:8000`.
+
+### e) Vérifier
+
+```bash
+curl -I http://51.222.205.47
+```
+
+Doit répondre **`HTTP/1.1 200 OK`**.
+
+Depuis un navigateur : la page d'accueil s'affiche, avec le logo.
+
+### f) Mettre à jour le code ensuite
+
+```bash
+cd ~/parrainage
+git pull
+source venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py collectstatic --noinput
+sudo systemctl restart parrainage
+```
+
+---
+
+## 6 bis. Et le HTTPS ?
+
+Un cadenas **reconnu par les navigateurs** exige un **nom de domaine** :
+Let's Encrypt refuse de certifier une adresse IP seule. Aucun contournement
+honnête n'existe.
+
+Deux situations :
+
+**Sans domaine** (votre cas actuel) — le site reste en `http://`. Le
+navigateur n'affiche **aucun avertissement** en HTTP simple : il montre
+juste une icône « information » discrète. Rien d'alarmant pour les
+étudiants, contrairement à un certificat auto-signé qui déclencherait un
+écran rouge « connexion non privée » — à éviter absolument.
+
+**Avec un domaine** (~10 €/an) — le HTTPS devient gratuit et automatique :
+
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d votredomaine.com
+```
+
+Puis dans `.env` :
+
+```ini
+DJANGO_HTTPS=1
+DJANGO_SSL_REDIRECT=1
+DJANGO_ALLOWED_HOSTS=votredomaine.com
+DJANGO_CSRF_TRUSTED_ORIGINS=https://votredomaine.com
+```
+
+```bash
+sudo systemctl restart parrainage
+```
+
+> 💡 **Conseil** : pour un événement avec 127 étudiants, le domaine à 10 €
+> vaut largement l'investissement. C'est la seule façon d'avoir le cadenas,
+> et ça évite toutes les questions.
 
 ---
 
@@ -288,15 +425,29 @@ psql parrainage < sauvegarde_2026-09-22_1400.sql
 
 - [ ] `DJANGO_DEBUG=False` dans `.env`
 - [ ] `DJANGO_SECRET_KEY` : une vraie clé aléatoire, pas celle par défaut
-- [ ] `DJANGO_ALLOWED_HOSTS` : votre domaine, pas `*`
-- [ ] HTTPS actif (certbot)
+- [ ] `DJANGO_ALLOWED_HOSTS` : l'adresse du site, pas `*`
+- [ ] `DJANGO_HTTPS` et `DJANGO_SSL_REDIRECT` cohérents avec le mode
+      (à `0` en HTTP, à `1` une fois le certificat en place)
+- [ ] Le service `parrainage` est `active (running)` et démarre au boot
+- [ ] Le site répond sur le **port 80**, sans `:8000`
+- [ ] `sudo nginx -t` ne signale aucune erreur
 - [ ] Mot de passe du superutilisateur changé
-- [ ] `identifiants.csv` **supprimé du serveur**
+- [ ] `identifiants.csv` **supprimé du serveur** après distribution
 - [ ] Sauvegarde de la base faite
 - [ ] Test : se connecter avec un identifiant, répondre au questionnaire
 - [ ] Test : le questionnaire est bien verrouillé après validation
 - [ ] Test : passer en phase *Teasing*, vérifier qu'aucun nom n'apparaît
+- [ ] Test : les photos des parrains s'affichent à la révélation
 - [ ] Sauvegarde de secours avant la révélation
+
+### Commandes utiles le jour J
+
+```bash
+sudo systemctl status parrainage     # le site tourne-t-il ?
+sudo systemctl restart parrainage    # le redémarrer
+sudo journalctl -u parrainage -f     # suivre les erreurs en direct
+sudo tail -f /var/log/nginx/error.log
+```
 
 ---
 
