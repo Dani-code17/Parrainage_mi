@@ -306,9 +306,12 @@
     const questions = Array.from(form.querySelectorAll('.question'));
     if (!questions.length) return;
 
-    const barre = form.querySelector('[data-remplissage]');
-    const compteur = form.querySelector('[data-compteur]');
-    const repondues = form.querySelector('[data-repondues]');
+    /* Ces éléments sont HORS du formulaire (dans l'en-tête du quiz) : on les
+       cherche dans le document, pas dans le formulaire. C'est ce qui faisait
+       planter le script et gelait toute la progression. */
+    const barre = document.querySelector('[data-remplissage]');
+    const compteur = document.querySelector('[data-compteur]');
+    const repondues = document.querySelector('[data-repondues]');
     const btnPrec = form.querySelector('[data-precedent]');
     const btnSuiv = form.querySelector('[data-suivant]');
     const zoneFin = form.querySelector('[data-zone-fin]');
