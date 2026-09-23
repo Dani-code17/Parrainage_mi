@@ -1,261 +1,427 @@
 {% extends "base.html" %}
 {% block title %}La révélation{% endblock %}
 
-{% block content %}
+{% block styles %}
+<style>
+    /* ================================================================
+       MODE PROJECTION — un binôme à la fois
+       ================================================================ */
+    body { overflow-x: hidden; }
 
-{# ---------- Rideau d'ouverture : compte à rebours 3-2-1 ---------- #}
-<div id="rideau" class="no-print">
-    <div>
-        <div class="intro mb-3">Parrainage MIAGE · Révélation</div>
-        <div class="compte" id="compte">3</div>
-        <p class="mt-4 mb-0" style="color: rgba(255,255,255,.8);">Préparez-vous…</p>
-        <button id="passer" class="btn btn-contour-marine text-white border-white mt-4 btn-sm"
-                style="border-color: rgba(255,255,255,.45);">
-            Passer l'introduction
+    .scene {
+        position: relative;
+        min-height: 78vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    /* ---------- Écran d'accueil ---------- */
+    .accueil-revelation { animation: apparaitre .5s var(--ease) both; }
+    .accueil-titre {
+        font-size: clamp(1.8rem, 5vw, 3.2rem);
+        font-weight: 800;
+        color: var(--marine);
+        line-height: 1.1;
+    }
+
+    /* ---------- Compteur de sauvegarde ---------- */
+    .barre-projection {
+        position: sticky;
+        top: 0;
+        z-index: 1040;
+        background: var(--marine);
+        color: #fff;
+        padding: .55rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: .85rem;
+        border-bottom: 3px solid var(--jaune);
+    }
+    .barre-projection .avancement {
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+    }
+
+    /* ---------- La carte du binôme ---------- */
+    .carte-scene {
+        width: min(940px, 95vw);
+        background: var(--blanc);
+        border-radius: 1.1rem;
+        border: 1px solid var(--gris-bord);
+        border-top: 6px solid var(--jaune);
+        box-shadow: 0 18px 50px rgba(1, 47, 107, .22);
+        overflow: hidden;
+        animation: apparaitre .5s var(--ease) both;
+    }
+    .carte-scene.revient { animation: apparaitreRetour .4s var(--ease) both; }
+    @keyframes apparaitreRetour {
+        from { opacity: 0; transform: translateX(-26px); }
+        to   { opacity: 1; transform: none; }
+    }
+
+    /* En-tête : le parrain / la marraine */
+    .scene-parrain {
+        background: var(--marine);
+        color: #fff;
+        padding: 1.6rem 1.5rem 1.3rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .scene-parrain::after {
+        content: '';
+        position: absolute;
+        width: 300px; height: 300px;
+        right: -110px; top: -140px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,199,44,.28), transparent 70%);
+        pointer-events: none;
+    }
+    .etiquette-parrain {
+        font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
+        color: var(--jaune); font-weight: 700;
+    }
+    .nom-principal {
+        font-family: 'Sora', sans-serif;
+        font-size: clamp(1.5rem, 4vw, 2.6rem);
+        font-weight: 800;
+        margin: .35rem 0 0;
+        line-height: 1.1;
+    }
+
+    /* Photos */
+    .portrait {
+        width: clamp(96px, 17vw, 150px);
+        height: clamp(96px, 17vw, 150px);
+        border-radius: 50%;
+        object-fit: cover;
+        border: 5px solid var(--jaune);
+        box-shadow: 0 12px 30px rgba(1, 47, 107, .3);
+        background: var(--blanc);
+    }
+    .portrait-vide {
+        display: grid; place-items: center;
+        background: var(--jaune);
+        color: var(--marine);
+        font-family: 'Sora', sans-serif;
+        font-weight: 800;
+        font-size: clamp(2rem, 5vw, 3rem);
+    }
+
+    /* Les filleuls */
+    .scene-filleul {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--gris-bord);
+        animation: apparaitre .45s var(--ease) both;
+    }
+    .scene-filleul:last-of-type { border-bottom: none; }
+    .fleche {
+        font-size: 1.8rem; color: var(--jaune); line-height: 1;
+        font-weight: 800;
+    }
+
+    /* Score */
+    .score-scene {
+        font-family: 'Sora', sans-serif;
+        font-size: clamp(2.2rem, 6vw, 3.6rem);
+        font-weight: 800;
+        color: var(--marine);
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+    .jauge {
+        height: 10px; border-radius: 999px;
+        background: #e6eaf3; overflow: hidden;
+        margin-top: .5rem;
+    }
+    .jauge > div {
+        height: 100%; width: 0;
+        background: var(--jaune);
+        border-radius: 999px;
+        transition: width .9s cubic-bezier(.22,.61,.36,1);
+    }
+
+    /* Message de bienvenue (Q25) */
+    .mot-binome {
+        background: #f7f9fd;
+        border-left: 4px solid var(--jaune);
+        border-radius: .5rem;
+        padding: .8rem 1rem;
+        font-style: italic;
+        color: var(--marine);
+        text-align: left;
+    }
+
+    /* ---------- Commandes ---------- */
+    .commandes {
+        position: fixed;
+        bottom: 1rem; left: 50%;
+        transform: translateX(-50%);
+        z-index: 1050;
+        display: flex;
+        gap: .6rem;
+        align-items: center;
+        background: rgba(255,255,255,.96);
+        border: 1px solid var(--gris-bord);
+        border-radius: 999px;
+        padding: .45rem .6rem;
+        box-shadow: 0 8px 26px rgba(1, 47, 107, .18);
+    }
+    .commandes .indice-touche {
+        font-size: .75rem; color: var(--texte-doux); padding: 0 .4rem;
+    }
+    kbd {
+        background: var(--marine); color: #fff;
+        border-radius: .25rem; padding: .1rem .35rem;
+        font-size: .7rem; font-family: inherit;
+    }
+
+    /* ---------- Écran final ---------- */
+    .final-titre {
+        font-family: 'Sora', sans-serif;
+        font-size: clamp(2rem, 6vw, 3.6rem);
+        font-weight: 800;
+        color: var(--marine);
+    }
+
+    @media print {
+        .commandes, .barre-projection { display: none !important; }
+        body { background: #fff; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .carte-scene, .scene-filleul { animation: none !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="barre-projection no-print">
+    <span><i class="bi bi-stars"></i> Révélation</span>
+    <span class="avancement" data-avancement>— / {{ groupes|length }}</span>
+</div>
+
+<div class="scene" id="scene">
+
+    {# ---------------- Écran d'accueil ---------------- #}
+    <div class="accueil-revelation text-center" id="accueil">
+        <div class="display-1 mb-3">🎉</div>
+        <p class="etiquette-parrain mb-2">Parrainage MIAGE · L1 × L3</p>
+        <h1 class="accueil-titre mb-4">La grande révélation</h1>
+        <p class="texte-doux fs-5 mb-4">
+            {{ stats.l1_places }} binôme{{ stats.l1_places|pluralize }} à découvrir
+        </p>
+        <button class="btn btn-jaune btn-lg px-5" id="btn-commencer">
+            <i class="bi bi-play-fill"></i> Commencer
+        </button>
+        <p class="texte-doux small mt-4 mb-0">
+            Barre <kbd>espace</kbd> ou clic pour avancer · <kbd>←</kbd> pour revenir
+        </p>
+    </div>
+
+    {# ---------------- Les cartes, une par une ---------------- #}
+    {% for groupe in groupes %}
+    <div class="carte-scene" data-bloc="{{ forloop.counter0 }}" hidden>
+        <div class="scene-parrain text-center">
+            {% if groupe.l3.a_une_photo %}
+                <img src="{{ groupe.l3.photo.url }}" alt="" class="portrait mb-3">
+            {% else %}
+                <div class="portrait portrait-vide mb-3">{{ groupe.l3.initiales }}</div>
+            {% endif %}
+            <div class="etiquette-parrain">Parrain / Marraine</div>
+            <h2 class="nom-principal">{{ groupe.l3.prenom }} {{ groupe.l3.nom }}</h2>
+            <div class="small mt-2" style="color: rgba(255,255,255,.75);">
+                {{ groupe.l3.groupe|default:groupe.l3.niveau }}
+            </div>
+        </div>
+
+        <div class="scene-filleul">
+            <div class="fleche mb-3">↓</div>
+            <div class="etiquette-parrain" style="color: var(--texte-doux);">
+                Accompagne {{ groupe.nb_filleuls }} filleul{{ groupe.nb_filleuls|pluralize }}
+            </div>
+        </div>
+
+        {% for f in groupe.filleuls %}
+        <div class="scene-filleul">
+            <div class="d-flex align-items-center justify-content-center gap-4 flex-wrap">
+                <div class="text-center">
+                    {% if f.l1.a_une_photo %}
+                        <img src="{{ f.l1.photo.url }}" alt="" class="portrait">
+                    {% else %}
+                        <div class="portrait portrait-vide">{{ f.l1.initiales }}</div>
+                    {% endif %}
+                </div>
+                <div class="text-center text-md-start">
+                    <div class="etiquette-parrain" style="color: var(--texte-doux);">Filleul / Filleule</div>
+                    <h3 class="nom-principal" style="color: var(--marine); font-size: clamp(1.2rem, 3vw, 1.9rem);">
+                        {{ f.l1.prenom }} {{ f.l1.nom }}
+                    </h3>
+                    <span class="badge badge-doux">{{ f.l1.groupe|default:f.l1.niveau }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {# Le message anonyme qu'il/elle avait laissé (Q25) #}
+        {% if groupe.message %}
+        <div class="scene-filleul">
+            <div class="etiquette-parrain mb-2" style="color: var(--texte-doux);">
+                <i class="bi bi-envelope-paper"></i> Son message, écrit avant de te connaître
+            </div>
+            <p class="mot-binome mb-0">« {{ groupe.message }} »</p>
+        </div>
+        {% endif %}
+
+        <div class="scene-filleul bg-white">
+            <div class="etiquette-parrain mb-1" style="color: var(--texte-doux);">
+                Score de compatibilité
+            </div>
+            <div class="score-scene">{{ groupe.score_moyen }}<span class="fs-4 texte-doux">/100</span></div>
+            <div class="jauge mx-auto" style="max-width: 420px;">
+                <div data-jauge="{{ groupe.score_moyen }}"></div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {# ---------------- Écran final ---------------- #}
+    <div class="accueil-revelation text-center" id="final" hidden>
+        <div class="display-1 mb-3">💛</div>
+        <h1 class="final-titre mb-3">Belle route à tous les binômes !</h1>
+        <p class="texte-doux fs-5 mb-4">
+            {{ stats.l1_places }} binôme{{ stats.l1_places|pluralize }} formé{{ stats.l1_places|pluralize }} cette année.
+        </p>
+        <button class="btn btn-contour-marine" id="btn-revoir">
+            <i class="bi bi-arrow-repeat"></i> Revoir depuis le début
         </button>
     </div>
 </div>
 
-<div class="hero text-center">
-    <span class="etiquette mb-3"><i class="bi bi-stars"></i> Le grand jour</span>
-    <h1 class="display-5 mb-2">La grande révélation</h1>
-    <p class="mb-0" style="color: rgba(255,255,255,.88);">
-        {{ stats.l1_places }} binôme{{ stats.l1_places|pluralize }} formé{{ stats.l1_places|pluralize }} cette année.
-    </p>
-</div>
-
-<div class="row g-3 mb-4 no-print">
-    <div class="col-6 col-md-3">
-        <div class="compteur">
-            <div class="compteur-valeur" data-compter="{{ stats.l1_places }}">0</div>
-            <div class="compteur-label">Binômes</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="compteur">
-            <div class="compteur-valeur" data-compter="{{ stats.l3_avec_filleuls }}">0</div>
-            <div class="compteur-label">Parrains / marraines</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="compteur">
-            <div class="compteur-valeur" data-compter="{{ stats.l1_eligibles }}">0</div>
-            <div class="compteur-label">Filleuls</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="compteur">
-            <div class="compteur-valeur" data-compter="{{ stats.capacite }}">0</div>
-            <div class="compteur-label">Filleuls max / L3</div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-4" id="grille">
-    {% for groupe in groupes %}
-    <div class="col-md-6 col-lg-4">
-        <div class="carte carte-hover h-100 carte-accent carte-parrain">
-            <div class="p-4 text-center fond-marine entete-parrain">
-                {% if groupe.l3.a_une_photo %}
-                    <img src="{{ groupe.l3.photo.url }}" alt=""
-                         class="photo-parrain mb-2">
-                {% else %}
-                    <div class="photo-parrain photo-vide mb-2">{{ groupe.l3.initiales }}</div>
-                {% endif %}
-                <div class="small mb-1" style="color: var(--jaune); font-weight: 700; letter-spacing: .06em;">
-                    PARRAIN / MARRAINE · {{ groupe.l3.groupe|default:groupe.l3.niveau }}
-                </div>
-                <h4 class="text-white mb-0 mt-1">{{ groupe.l3.prenom }} {{ groupe.l3.nom }}</h4>
-                <div class="mt-2 small" style="color: rgba(255,255,255,.75);">
-                    Accompagne {{ groupe.nb_filleuls }} filleul{{ groupe.nb_filleuls|pluralize }}
-                </div>
-            </div>
-            <div class="p-3">
-                {% for f in groupe.filleuls %}
-                <div class="ligne-filleul d-flex justify-content-between align-items-center"
-                     style="{% if not forloop.last %}border-bottom: 1px solid var(--gris-bord);{% endif %}">
-                    <div class="d-flex align-items-center gap-2">
-                        {% if f.l1.a_une_photo %}
-                            <img src="{{ f.l1.photo.url }}" alt="" class="photo-filleul">
-                        {% else %}
-                            <span class="photo-filleul photo-vide">{{ f.l1.initiales }}</span>
-                        {% endif %}
-                        <div>
-                            <div class="fw-semibold texte-marine">
-                                {{ f.l1.prenom }} {{ f.l1.nom }}
-                            </div>
-                            <span class="badge badge-doux">{{ f.l1.groupe|default:f.l1.niveau }}</span>
-                        </div>
-                    </div>
-                    <div class="text-end">
-                        <div class="fw-bold" style="color: var(--marine); font-size: 1.35rem; font-family: 'Sora', sans-serif;">
-                            {{ f.score }}<span class="small texte-doux">/100</span>
-                        </div>
-                        <div class="texte-doux" style="font-size: .7rem;">compatibilité</div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-
-            <div class="px-3 pb-3">
-                <div class="d-flex justify-content-between small texte-doux pt-2"
-                     style="border-top: 1px solid var(--gris-bord);">
-                    <span>Score moyen</span>
-                    <strong class="texte-marine">{{ groupe.score_moyen }}/100</strong>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% empty %}
-    <div class="col-12">
-        <div class="carte p-5 text-center">
-            <p class="texte-doux mb-0">Aucun binôme à afficher pour le moment.</p>
-        </div>
-    </div>
-    {% endfor %}
-</div>
-
-{% if groupes %}
-<div class="text-center mt-4 no-print">
-    <button id="rejouer" class="btn btn-contour-marine">
-        <i class="bi bi-arrow-repeat"></i> Rejouer l'animation
+{# ---------------- Commandes ---------------- #}
+<div class="commandes no-print" id="commandes" hidden>
+    <button class="btn btn-contour-marine btn-sm" id="btn-precedent">
+        <i class="bi bi-arrow-left"></i> Précédent
+    </button>
+    <span class="indice-touche d-none d-md-inline">
+        <kbd>espace</kbd> suivant
+    </span>
+    <button class="btn btn-jaune btn-sm px-3" id="btn-suivant">
+        Suivant <i class="bi bi-arrow-right"></i>
+    </button>
+    <button class="btn btn-outline-secondary btn-sm" id="btn-plein-ecran" title="Plein écran">
+        <i class="bi bi-arrows-fullscreen"></i>
     </button>
 </div>
-{% endif %}
 {% endblock %}
 
 {% block scripts %}
-{% if groupes %}
 <script>
-    /* =====================================================================
-       Séquence de révélation
-       1. un rideau avec un compte à rebours 3-2-1
-       2. les cartes apparaissent une par une
-       3. des confettis célèbrent l'ensemble
-       Un bouton « Passer » et le respect de « animations réduites »
-       permettent de tout afficher immédiatement.
-       ===================================================================== */
-    (function () {
-        const rideau    = document.getElementById('rideau');
-        const compte    = document.getElementById('compte');
-        const passer    = document.getElementById('passer');
-        const rejouer   = document.getElementById('rejouer');
-        const cartes    = Array.from(document.querySelectorAll('.carte-parrain'));
-        const compteurs = Array.from(document.querySelectorAll('[data-compter]'));
-        const sansAnimation = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+(function () {
+    const accueil = document.getElementById('accueil');
+    const final = document.getElementById('final');
+    const cartes = Array.from(document.querySelectorAll('.carte-scene'));
+    const commandes = document.getElementById('commandes');
+    const avancement = document.querySelector('[data-avancement]');
+    const btnCommencer = document.getElementById('btn-commencer');
+    const btnRevoir = document.getElementById('btn-revoir');
+    const btnSuivant = document.getElementById('btn-suivant');
+    const btnPrecedent = document.getElementById('btn-precedent');
+    const btnPleinEcran = document.getElementById('btn-plein-ecran');
 
-        let minuteries = [];
+    // -1 = écran d'accueil, cartes.length = écran final
+    let index = -1;
 
-        function viderMinuteries() {
-            minuteries.forEach(clearTimeout);
-            minuteries = [];
+    function total() { return cartes.length; }
+
+    function masquerTout() {
+        accueil.hidden = true;
+        final.hidden = true;
+        cartes.forEach(c => { c.hidden = true; c.classList.remove('revient'); });
+        commandes.hidden = true;
+    }
+
+    function afficher(numero, recul) {
+        masquerTout();
+        index = numero;
+
+        if (numero < 0) {
+            accueil.hidden = false;
+            avancement.textContent = '— / ' + total();
+            return;
+        }
+        if (numero >= total()) {
+            final.hidden = false;
+            avancement.textContent = total() + ' / ' + total();
+            return;
         }
 
-        /* --- Confettis --- */
-        function confettis(nombre) {
-            if (sansAnimation) return;
-            const couleurs = ['#ffc72c', '#ffffff', '#02498f', '#ffe08a'];
-            for (let i = 0; i < nombre; i++) {
-                const c = document.createElement('div');
-                c.className = 'confetti';
-                c.style.left = Math.random() * 100 + 'vw';
-                c.style.background = couleurs[Math.floor(Math.random() * couleurs.length)];
-                c.style.animation = `tomber ${2.4 + Math.random() * 1.8}s linear ${Math.random() * 0.5}s forwards`;
-                if (Math.random() > .5) c.style.borderRadius = '50%';
-                document.body.appendChild(c);
-                setTimeout(() => c.remove(), 4800);
-            }
-        }
+        const carte = cartes[numero];
+        carte.hidden = false;
+        if (recul) carte.classList.add('revient');
+        commandes.hidden = false;
+        avancement.textContent = (numero + 1) + ' / ' + total();
 
-        /* --- Compteurs qui s'incrémentent --- */
-        function animerCompteurs() {
-            compteurs.forEach(el => {
-                const cible = parseInt(el.dataset.compter, 10) || 0;
-                if (sansAnimation || cible === 0) { el.textContent = cible; return; }
-                let valeur = 0;
-                const pas = Math.max(1, Math.ceil(cible / 40));
-                const tic = setInterval(() => {
-                    valeur = Math.min(cible, valeur + pas);
-                    el.textContent = valeur;
-                    if (valeur >= cible) clearInterval(tic);
-                }, 28);
-                minuteries.push(tic);
+        // La jauge se remplit une fois la carte affichée.
+        const jauge = carte.querySelector('[data-jauge]');
+        if (jauge) {
+            const valeur = jauge.getAttribute('data-jauge');
+            requestAnimationFrame(() => {
+                setTimeout(() => { jauge.style.width = valeur + '%'; }, 120);
             });
         }
 
-        /* --- Dévoilement des cartes --- */
-        function revelerCartes() {
-            cartes.forEach((carte, i) => {
-                const t = setTimeout(() => {
-                    carte.classList.add('voile');
-                    if (i % 3 === 2) confettis(24);   // une salve toutes les 3 cartes
-                }, sansAnimation ? 0 : i * 260);
-                minuteries.push(t);
-            });
-            const fin = setTimeout(() => {
-                confettis(140);
-                animerCompteurs();
-            }, sansAnimation ? 0 : cartes.length * 260 + 350);
-            minuteries.push(fin);
+        btnPrecedent.disabled = numero === 0;
+        btnSuivant.innerHTML = (numero === total() - 1)
+            ? 'Terminer <i class="bi bi-check2"></i>'
+            : 'Suivant <i class="bi bi-arrow-right"></i>';
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function suivant() { afficher(index + 1); }
+    function precedent() { if (index > 0) afficher(index - 1, true); }
+
+    btnCommencer.addEventListener('click', () => afficher(0));
+    btnSuivant.addEventListener('click', suivant);
+    btnPrecedent.addEventListener('click', precedent);
+    btnRevoir.addEventListener('click', () => afficher(0));
+
+    // Clic n'importe où sur la scène : avance (sauf sur un bouton).
+    document.getElementById('scene').addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        if (index === -1) return;          // l'accueil a son propre bouton
+        suivant();
+    });
+
+    // Clavier : espace / flèches / Échap
+    document.addEventListener('keydown', (e) => {
+        if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'PageDown') {
+            e.preventDefault();
+            if (index === -1) afficher(0); else suivant();
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+            e.preventDefault();
+            precedent();
+        } else if (e.key === 'Home') {
+            afficher(0);
+        } else if (e.key === 'Escape' && document.fullscreenElement) {
+            document.exitFullscreen();
         }
+    });
 
-        /* --- Séquence complète --- */
-        function lancer() {
-            viderMinuteries();
-            cartes.forEach(c => c.classList.remove('voile'));
-            compteurs.forEach(el => el.textContent = '0');
-
-            if (sansAnimation) {
-                rideau.classList.add('ouvert');
-                cartes.forEach(c => c.classList.add('voile'));
-                animerCompteurs();
-                return;
-            }
-
-            rideau.classList.remove('ouvert');
-            let n = 3;
-            compte.textContent = n;
-            compte.style.animation = 'none';
-            void compte.offsetWidth;
-            compte.style.animation = 'pop .5s cubic-bezier(.22,.61,.36,1) both';
-
-            const decompte = setInterval(() => {
-                n--;
-                if (n > 0) {
-                    compte.textContent = n;
-                    compte.style.animation = 'none';
-                    void compte.offsetWidth;
-                    compte.style.animation = 'pop .5s cubic-bezier(.22,.61,.36,1) both';
-                } else {
-                    clearInterval(decompte);
-                    compte.textContent = '🎉';
-                    const t = setTimeout(() => {
-                        rideau.classList.add('ouvert');
-                        revelerCartes();
-                    }, 550);
-                    minuteries.push(t);
-                }
-            }, 850);
-            minuteries.push(decompte);
+    // Plein écran
+    btnPleinEcran.addEventListener('click', () => {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            document.documentElement.requestFullscreen().catch(() => {});
         }
+    });
 
-        /* --- Interaction --- */
-        passer.addEventListener('click', () => {
-            viderMinuteries();
-            rideau.classList.add('ouvert');
-            cartes.forEach(c => c.classList.add('voile'));
-            animerCompteurs();
-        });
-
-        if (rejouer) {
-            rejouer.addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                lancer();
-            });
-        }
-
-        lancer();
-    })();
+    afficher(-1);
+})();
 </script>
-{% endif %}
 {% endblock %}

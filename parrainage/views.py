@@ -438,7 +438,9 @@ def revelation_view(request):
         entree['score_moyen'] = round(sum(scores) / len(scores)) if scores else 0
         entree['nb_filleuls'] = len(scores)
         liste.append(entree)
-    liste.sort(key=lambda e: (-e['score_moyen'], e['l3'].nom))
+    # Montée en tension : on dévoile du plus faible au meilleur score, pour
+    # garder le meilleur binôme pour la fin.
+    liste.sort(key=lambda e: (e['score_moyen'], e['l3'].nom))
 
     return render(request, 'parrainage/revelation.html', {
         'groupes': liste,
