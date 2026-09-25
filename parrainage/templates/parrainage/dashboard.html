@@ -101,10 +101,7 @@
         <div class="carte carte-accent p-5 text-center reveal">
             <i class="bi bi-megaphone-fill display-4 texte-marine pop"></i>
             <h4 class="texte-marine mt-3">C'est l'heure de la révélation !</h4>
-            <p class="texte-doux">Tous les binômes sont affichés à l'écran.</p>
-            <a href="{% url 'revelation' %}" class="btn btn-jaune btn-lg">
-                <i class="bi bi-stars"></i> Voir la révélation
-            </a>
+            <p class="texte-doux">Regardez l'écran : votre binôme va être dévoilé.</p>
         </div>
     {% else %}
 
@@ -161,10 +158,7 @@
     <div class="carte carte-accent carte-halo p-5 text-center reveal">
         <i class="bi bi-stars display-4 texte-marine"></i>
         <h4 class="texte-marine mt-3">La grande révélation</h4>
-        <p class="texte-doux">Tous les binômes de la promotion sont affichés.</p>
-        <a href="{% url 'revelation' %}" class="btn btn-jaune btn-lg">
-            <i class="bi bi-stars"></i> Voir le tableau complet
-        </a>
+        <p class="texte-doux">Votre binôme apparaît ci-dessous.</p>
     </div>
     {% else %}
     <div class="carte p-5 text-center reveal">

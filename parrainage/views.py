@@ -410,9 +410,22 @@ def photo_view(request):
 def revelation_view(request):
     """Écran de projection : tous les binômes publics avec score 0-100.
 
+    Réservé à l'équipe : la projection se fait depuis le compte
+    d'administration, branché au vidéoprojecteur. Un étudiant ne peut pas
+    découvrir l'ensemble des binômes avant l'heure — il voit le sien sur son
+    espace personnel.
+
     Les binômes sont regroupés par parrain/marraine, puisque chacun peut
     encadrer plusieurs filleuls. Aucune mention de priorité n'apparaît.
     """
+    if not request.user.is_staff:
+        messages.info(
+            request,
+            "La révélation complète s'affiche sur l'écran de projection. "
+            "Votre binôme apparaît dans votre espace personnel."
+        )
+        return redirect('dashboard')
+
     p = parametres()
     if not p.revelation_declenchee_manuellement:
         messages.info(request, "La révélation n'a pas encore été déclenchée par l'équipe.")

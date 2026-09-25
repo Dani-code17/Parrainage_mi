@@ -691,6 +691,12 @@
                 {% endif %}
                 {% if user.is_superuser %}
                     <li class="nav-item">
+                        <a class="nav-link {% if 'revelation' in request.path %}actif{% endif %}"
+                           href="{% url 'revelation' %}" title="Écran de projection">
+                            <i class="bi bi-projector"></i> Projection
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'admin:index' %}">
                             <i class="bi bi-gear"></i> Administration
                         </a>

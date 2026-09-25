@@ -506,7 +506,20 @@ class AnonymatTests(TestCase):
         self.l1.user.set_password('MotDePasse1')
         self.l1.user.save()
 
+    def test_revelation_reservee_a_lequipe(self):
+        """Un étudiant ne peut pas ouvrir l'écran de projection."""
+        p = ParametreEvenement.obtenir()
+        p.phase_actuelle = ParametreEvenement.Phase.REVELATION
+        p.revelation_declenchee_manuellement = True
+        p.save()
+
+        self.client.login(username='l.roux', password='MotDePasse1')
+        reponse = self.client.get(reverse('revelation'))
+        self.assertEqual(reponse.status_code, 302)
+        self.assertTrue(reponse.url.endswith('/dashboard/'))
+
     def test_revelation_ne_contient_aucun_mot_interdit(self):
+        """Pour l'équipe : aucune mention de priorité sur l'écran de projection."""
         DemandeForcage.objects.create(
             demandeur=self.l3, cible=self.l1,
             statut=DemandeForcage.Statut.ACCEPTE)
@@ -514,6 +527,10 @@ class AnonymatTests(TestCase):
         p.phase_actuelle = ParametreEvenement.Phase.REVELATION
         p.revelation_declenchee_manuellement = True
         p.save()
+
+        # L'écran de projection est réservé au personnel.
+        self.l1.user.is_staff = True
+        self.l1.user.save()
 
         self.client.login(username='l.roux', password='MotDePasse1')
         page = self.client.get(reverse('revelation'))
