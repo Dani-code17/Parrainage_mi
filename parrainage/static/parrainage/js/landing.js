@@ -17,25 +17,25 @@
     {
       label: 'Ton réflexe quand un devoir tombe demain ?',
       options: [
-        'MIAGE, c’est famille (donc je compte sur ma famille)',
-        'Chacun pour soi, Dieu pour tous',
-        'C’est le dernier étudiant qui fait minute'
+        'MIAGE C’EST FAMILLE (donc je compte sur ma famille)',
+        'Chacun pour soi Dieu pour tous',
+        'C’est dernier étudiant qui fait minute'
       ]
     },
     {
-      label: 'Ton coin préféré pour grailler ?',
+      label: 'Ton coin préféré pour graille ?',
       options: [
         'Chez Edmond',
         'Chez Adjara panini',
-        'Un peu partout'
+        'Autres'
       ]
     },
     {
-      label: 'Cours à 8h, tu quittes la maison à 7h30. Tu fais quoi ?',
+      label: 'Tu as cours à 8h, tu quittes la maison il est 7h30, tu fais quoi ?',
       options: [
-        'Le retard, c’est mon champ',
-        'Wouuu, je file, faut pas qu’ils ferment le portail sur moi !',
-        'C’est quoi qui est cours, là ???'
+        'Le retard c’est mon champ',
+        'WOUUU attends je vais aller vite faut pas ils vont fermer portail sur moi',
+        'C’est quoi qui est cours là ???'
       ]
     }
   ];
