@@ -14,21 +14,42 @@
      1. CONTENU DU MINI-JEU — modifie librement ces textes
      --------------------------------------------------------- */
   var QUESTIONS = [
-    { label: 'Ton mode de révision ?', options: ['Seul·e au calme', 'En groupe', 'La veille au soir'] },
-    { label: 'Ton QG sur le campus ?', options: ['La BU', 'La cafét’', 'La salle info'] },
-    { label: 'Ton week-end idéal ?', options: ['Hackathon', 'Sport', 'Série + plaid'] }
+    {
+      label: 'Un contrôle dans 3 jours. Tu fais quoi ?',
+      options: [
+        'Fiches prêtes depuis longtemps 😌',
+        'Je révise à fond la veille, café serré ☕',
+        '3 jours ? Quelqu’un peut me résumer ? 💀'
+      ]
+    },
+    {
+      label: 'Le spot où tu traînes le plus ?',
+      options: [
+        'La BU, mon sanctuaire silencieux',
+        'La cafét’, le vrai bureau de la promo',
+        'Le foyer ou la salle info'
+      ]
+    },
+    {
+      label: 'Ton week-end de rêve ?',
+      options: [
+        'Sortie, musique, on rentre tard',
+        'Sport, grand air, on bouge',
+        'Plaid, série, zéro bruit'
+      ]
+    }
   ];
   // Archétype = PROFIL[réponse Q1] + STYLE[réponse Q3]
-  var PROFIL = ['Stratège', 'Rassembleur·se', 'Sprinteur·se'];
-  var STYLE = ['du code', 'en mouvement', 'tout en douceur'];
+  var PROFIL = ['Stratège', 'Marathonien·ne', 'Improviste'];
+  var STYLE = ['des sorties', 'du grand air', 'du canapé'];
   var DESCRIPTIONS = [
-    'Tu avances avec méthode et tu aimes comprendre avant d’agir. Ton QG : ',
-    'Tu fais avancer tout le monde autour de toi, réviser seul·e très peu pour toi. Ton QG : ',
-    'La pression te réussit : tu gardes ton sang-froid quand tout s’accélère. Ton QG : '
+    'Tu prends les devants et tu aimes comprendre avant d’agir. Ton QG : ',
+    'Tu donnes tout au dernier moment, et souvent ça passe. Ton QG : ',
+    'Tu improvises, et tu trouves toujours une porte de sortie. Ton QG : '
   ];
   var L3_IDEAL = [
     'un·e L3 qui partage ses fiches, ses méthodes et ses bons plans.',
-    'un·e L3 qui t’embarque dans la vie de la promo dès la rentrée.',
+    'un·e L3 qui garde la tête froide quand tout s’accélère.',
     'un·e L3 qui t’aide à anticiper… au moins un peu.'
   ];
   var VERDICTS = ['DUO EXPLOSIF', 'BINÔME DE LÉGENDE', 'COMPATIBILITÉ REDOUTABLE'];
