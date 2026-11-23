@@ -428,6 +428,14 @@ def revelation_view(request):
 
     p = parametres()
     if not p.revelation_declenchee_manuellement:
+        if request.user.is_staff:
+            messages.warning(
+                request,
+                "La révélation n'est pas encore déclenchée. Dans l'admin, "
+                "ouvrez « Paramètre de l'événement », cochez la ligne puis "
+                "lancez l'action « FORCER LA RÉVÉLATION ». Revenez ensuite ici."
+            )
+            return redirect('admin:parrainage_parametreevenement_changelist')
         messages.info(request, "La révélation n'a pas encore été déclenchée par l'équipe.")
         return redirect('dashboard')
 
