@@ -100,7 +100,7 @@ def home(request):
         etudiant = get_etudiant(request)
         if etudiant:
             return redirect('dashboard')
-    return render(request, 'parrainage/home.html', contexte)
+    return render(request, 'parrainage/accueil.html', contexte)
 
 
 def inscription_view(request):

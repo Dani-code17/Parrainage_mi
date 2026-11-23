@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#040917">
+<title>Connexion — Parrainage MIAGE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div style="width: 100%; min-height: 100vh; display: flex; flex-wrap: wrap">
+
+  <!-- ============ PANNEAU GAUCHE (masqué sur mobile) ============ -->
+  <aside class="lx-side px-grain" aria-hidden="true" style="flex: 1 1 520px; min-width: 0; position: relative; overflow: hidden; background-color: #012F6B; padding: 40px clamp(32px, 5vw, 72px); display: flex; flex-direction: column; justify-content: space-between; gap: 40px; min-height: 100vh">
+    <div style="position: absolute; width: 640px; height: 640px; left: -200px; bottom: -260px; border-radius: 50%; background: radial-gradient(circle, rgba(255,181,71,0.22) 0%, rgba(1,47,107,0) 68%)"></div>
+    <div style="position: relative; display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 15px">
+      <svg width="28" height="28" viewBox="0 0 32 32"><circle cx="12" cy="16" r="7" fill="none" stroke="#FFB547" stroke-width="2.6"/><circle cx="20" cy="16" r="7" fill="none" stroke="#5B9BFF" stroke-width="2.6"/></svg>
+      Parrainage MIAGE
+    </div>
+
+    <div style="position: relative; align-self: center; width: 100%; max-width: 380px; aspect-ratio: 1 / 1">
+      <div class="a-spin-fast" style="position: absolute; inset: 0; border-radius: 50%; border: 1px dashed rgba(220,230,245,0.3)"></div>
+      <div style="position: absolute; inset: 16%; border-radius: 50%; border: 1px solid rgba(91,155,255,0.3)"></div>
+      <div style="position: absolute; left: 50%; top: 50%; width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; background: #040917; border: 1px solid rgba(255,181,71,0.6); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 900; font-size: 34px; color: #FFB547; box-shadow: 0 0 60px rgba(255,181,71,0.45)">×</div>
+      <div class="a-spin-fast" style="position: absolute; inset: 0">
+        <div style="position: absolute; left: 50%; top: 0; width: 88px; height: 88px; margin: -44px 0 0 -44px">
+          <div class="a-unspin" style="width: 100%; height: 100%; border-radius: 50%; background: #FFB547; color: #040917; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 900; font-size: 24px; box-shadow: 0 0 50px rgba(255,181,71,0.55)">L1</div>
+        </div>
+        <div style="position: absolute; left: 50%; bottom: 0; width: 88px; height: 88px; margin: 0 0 -44px -44px">
+          <div class="a-unspin" style="width: 100%; height: 100%; border-radius: 50%; background: #5B9BFF; color: #040917; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 900; font-size: 24px; box-shadow: 0 0 50px rgba(91,155,255,0.55)">L3</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="position: relative; display: flex; flex-direction: column; gap: 16px">
+      <p style="margin: 0; font-family: var(--font-display); font-weight: 900; font-size: clamp(32px, 3.6vw, 52px); line-height: 0.95; letter-spacing: -0.03em">Ton binôme<br><span class="px-glow" style="color: #FFB547">t'attend.</span></p>
+      <p style="margin: 0; color: #DCE6F5; max-width: 36ch">25 questions, une seule fois. Puis rendez-vous le jour de la révélation.</p>
+      <!-- Compte à rebours : changer la date dans data-deadline -->
+      <div id="countdown" data-deadline="2026-10-31T23:59:00" data-closed-label="Inscriptions" style="display: inline-flex; align-self: flex-start; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 16px; background: rgba(4,9,23,0.45); border: 1px solid rgba(255,255,255,0.14); font-family: var(--font-mono); font-size: 15px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFB547" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 2h6"/></svg>
+        <span data-cd="label" style="color: #C9D5EC">Clôture dans</span><span data-cd="compact" style="color: #FFFFFF; font-weight: 700">—</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ FORMULAIRE ============ -->
+  <main style="flex: 1 1 480px; min-width: 0; min-height: 100vh; display: flex; flex-direction: column; padding: 28px clamp(20px, 5vw, 64px)">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+      <a href="index.html" class="px-link" style="display: inline-flex; align-items: center; gap: 8px; color: #C9D5EC; text-decoration: none; font-weight: 600; min-height: 44px; padding: 0 4px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>Retour à l'accueil</a>
+      <span style="font-family: var(--font-mono); font-size: 13px; color: #A9B8D6">Édition 2026-2027</span>
+    </div>
+
+    <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 0">
+      <div class="a-up" style="width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 28px">
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <h1 style="margin: 0; font-family: var(--font-display); font-weight: 900; font-size: clamp(36px, 4vw, 48px); line-height: 1; letter-spacing: -0.03em">Connexion</h1>
+          <p style="margin: 0; color: #C9D5EC; font-size: 18px">Saisis l'identifiant remis par l'équipe d'organisation.</p>
+        </div>
+
+        <!-- Erreur serveur : à afficher par ton back-end si les identifiants sont faux
+             (ici : visible en démo avec ?erreur=1 dans l'URL) -->
+        <div id="server-error" role="alert" hidden class="a-shake" style="display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 16px; background: rgba(255,107,107,0.10); border: 1px solid rgba(255,107,107,0.5); color: #FFC9C9">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF8A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 2px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+          <span><strong style="color: #FFFFFF">Identifiant ou mot de passe incorrect.</strong> Vérifie les majuscules et réessaie.</span>
+        </div>
+
+        <!-- action="" = la même URL. Remplace par l'URL de traitement de ton serveur si besoin. -->
+        <form id="login-form" method="post" action="" novalidate style="display: flex; flex-direction: column; gap: 22px">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <label for="lx-id" style="font-weight: 800; font-size: 15px">Identifiant <span aria-hidden="true" style="color: #FFB547">*</span></label>
+            <div style="position: relative">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A9B8D6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); pointer-events: none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input id="lx-id" name="username" type="text" class="lx-input" autocomplete="username" autocapitalize="none" spellcheck="false" required aria-required="true" aria-invalid="false" aria-describedby="lx-id-msg" style="padding: 0 16px 0 48px">
+            </div>
+            <span id="lx-id-msg" class="field-msg">Ex. : celui reçu de l’équipe (sensible à la casse).</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <label for="lx-pw" style="font-weight: 800; font-size: 15px">Mot de passe <span aria-hidden="true" style="color: #FFB547">*</span></label>
+            <div style="position: relative">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A9B8D6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); pointer-events: none"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input id="lx-pw" name="password" type="password" class="lx-input" autocomplete="current-password" required aria-required="true" aria-invalid="false" aria-describedby="lx-pw-msg" style="padding: 0 60px 0 48px">
+              <button type="button" id="toggle-pw" class="lx-eye" aria-label="Afficher le mot de passe" aria-pressed="false" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 12px; border: 0; background: transparent; color: #C9D5EC; cursor: pointer; display: flex; align-items: center; justify-content: center">
+                <svg data-eye="show" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg data-eye="hide" hidden width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M1 1l22 22"/></svg>
+              </button>
+            </div>
+            <span id="lx-pw-msg" class="field-msg"></span>
+          </div>
+
+          <button type="submit" id="submit-btn" class="px-btn btn-primary" aria-busy="false" style="font-size: 18px; height: 60px">
+            <span id="submit-loader" class="a-loader" hidden aria-hidden="true" style="width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid rgba(4,9,23,0.25); border-top-color: #040917"></span>
+            <span id="submit-label">Se connecter</span>
+          </button>
+        </form>
+
+        <div style="display: flex; gap: 14px; align-items: flex-start; padding: 18px 20px; border-radius: 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5B9BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 3px"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+          <p style="margin: 0; color: #C9D5EC; font-size: 15px"><strong style="color: #FFFFFF">Identifiant perdu ?</strong> Contacte l'équipe d'organisation, elle te le renverra.</p>
+        </div>
+      </div>
+    </div>
+
+    <footer style="font-size: 14px; color: #A9B8D6; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px">
+      <span>Parrainage MIAGE — L1 × L3 · 2026-2027</span>
+      <span>Les binômes sont dévoilés le jour de la révélation.</span>
+    </footer>
+  </main>
+</div>
+
+<script src="assets/js/common.js"></script>
+<script src="assets/js/connexion.js"></script>
+</body>
+</html>

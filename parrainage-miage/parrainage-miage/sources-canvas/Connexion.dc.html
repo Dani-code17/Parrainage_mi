@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Connexion — Parrainage MIAGE</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&amp;family=Manrope:wght@400;500;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#040917}
+a{color:#FFB547}a:hover{color:#FFCF85}
+.lx *{box-sizing:border-box}
+.lx-grain{background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:22px 22px}
+.lx-input{transition:border-color .2s ease,box-shadow .2s ease,background-color .2s ease}
+.lx-input:hover{border-color:rgba(255,255,255,.4)}
+.lx-input:focus{outline:none;border-color:#FFB547;box-shadow:0 0 0 4px rgba(255,181,71,.2);background:#0E1B3F}
+.lx-btn{transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease}
+.lx-btn:hover{transform:translateY(-2px);box-shadow:0 0 0 6px rgba(255,181,71,.18),0 18px 48px rgba(255,181,71,.35)}
+.lx-btn:focus-visible,.lx-link:focus-visible,.lx-eye:focus-visible{outline:3px solid #FFB547;outline-offset:3px}
+.lx-eye:hover{background:rgba(255,255,255,.08)}
+.lx-glow{text-shadow:0 0 28px rgba(255,181,71,.55),0 0 80px rgba(255,181,71,.25)}
+@keyframes lx-spin{to{transform:rotate(360deg)}}
+@keyframes lx-unspin{to{transform:rotate(-360deg)}}
+@keyframes lx-up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes lx-shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-6px)}40%,60%{transform:translateX(6px)}}
+.a-spin{animation:lx-spin 26s linear infinite}
+.a-unspin{animation:lx-unspin 26s linear infinite}
+.a-loader{animation:lx-spin .8s linear infinite}
+.a-up{opacity:0;animation:lx-up .8s cubic-bezier(.2,.8,.2,1) forwards}
+.a-shake{animation:lx-shake .5s ease}
+@media (max-width:900px){.lx-side{display:none !important}}
+@media (prefers-reduced-motion:reduce){.a-spin,.a-unspin,.a-shake{animation:none}.a-up{opacity:1;animation:none}.a-loader{animation-duration:2s}.lx-btn,.lx-input{transition:none}.lx-btn:hover{transform:none}}
+</style>
+</helmet>
+<div class="lx" style="width: 100%; min-height: 100vh; background: #040917; color: #F2F5FB; font-family: 'Manrope', system-ui, sans-serif; font-size: 17px; line-height: 1.6; display: flex; flex-wrap: wrap">
+
+<!-- LEFT: immersive panel -->
+<aside class="lx-side lx-grain" aria-hidden="true" style="flex: 1 1 520px; min-width: 0; position: relative; overflow: hidden; background-color: #012F6B; padding: 40px clamp(32px, 5vw, 72px); display: flex; flex-direction: column; justify-content: space-between; gap: 40px; min-height: 100vh">
+<div style="position: absolute; width: 640px; height: 640px; left: -200px; bottom: -260px; border-radius: 50%; background: radial-gradient(circle, rgba(255,181,71,0.22) 0%, rgba(1,47,107,0) 68%)"></div>
+<div style="position: relative; display: flex; align-items: center; gap: 10px; font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 15px">
+<svg width="28" height="28" viewBox="0 0 32 32"><circle cx="12" cy="16" r="7" fill="none" stroke="#FFB547" stroke-width="2.6"></circle><circle cx="20" cy="16" r="7" fill="none" stroke="#5B9BFF" stroke-width="2.6"></circle></svg>
+Parrainage MIAGE
+</div>
+
+<div style="position: relative; align-self: center; width: 100%; max-width: 380px; aspect-ratio: 1 / 1">
+<div class="a-spin" style="position: absolute; inset: 0; border-radius: 50%; border: 1px dashed rgba(220,230,245,0.3)"></div>
+<div style="position: absolute; inset: 16%; border-radius: 50%; border: 1px solid rgba(91,155,255,0.3)"></div>
+<div style="position: absolute; left: 50%; top: 50%; width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; background: #040917; border: 1px solid rgba(255,181,71,0.6); display: flex; align-items: center; justify-content: center; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 34px; color: #FFB547; box-shadow: 0 0 60px rgba(255,181,71,0.45)">×</div>
+<div class="a-spin" style="position: absolute; inset: 0">
+<div style="position: absolute; left: 50%; top: 0; width: 88px; height: 88px; margin: -44px 0 0 -44px">
+<div class="a-unspin" style="width: 100%; height: 100%; border-radius: 50%; background: #FFB547; color: #040917; display: flex; align-items: center; justify-content: center; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 24px; box-shadow: 0 0 50px rgba(255,181,71,0.55)">L1</div>
+</div>
+<div style="position: absolute; left: 50%; bottom: 0; width: 88px; height: 88px; margin: 0 0 -44px -44px">
+<div class="a-unspin" style="width: 100%; height: 100%; border-radius: 50%; background: #5B9BFF; color: #040917; display: flex; align-items: center; justify-content: center; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 24px; box-shadow: 0 0 50px rgba(91,155,255,0.55)">L3</div>
+</div>
+</div>
+</div>
+
+<div style="position: relative; display: flex; flex-direction: column; gap: 16px">
+<p style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(32px, 3.6vw, 52px); line-height: 0.95; letter-spacing: -0.03em">Ton binôme<br><span class="lx-glow" style="color: #FFB547">t'attend.</span></p>
+<p style="margin: 0; color: #DCE6F5; max-width: 36ch">25 questions, une seule fois. Puis rendez-vous le jour de la révélation.</p>
+<div style="display: inline-flex; align-self: flex-start; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 16px; background: rgba(4,9,23,0.45); border: 1px solid rgba(255,255,255,0.14); font-family: 'JetBrains Mono', monospace; font-size: 15px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFB547" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2"></path><path d="M9 2h6"></path></svg>
+<span style="color: #C9D5EC">{{cdLabel}}</span><span style="color: #FFFFFF; font-weight: 700">{{cdValue}}</span>
+</div>
+</div>
+</aside>
+
+<!-- RIGHT: form -->
+<main style="flex: 1 1 480px; min-width: 0; min-height: 100vh; display: flex; flex-direction: column; padding: 28px clamp(20px, 5vw, 64px)">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<a href="Main.dc.html" class="lx-link" style="display: inline-flex; align-items: center; gap: 8px; color: #C9D5EC; text-decoration: none; font-weight: 600; min-height: 44px; padding: 0 4px">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>Retour à l'accueil</a>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #A9B8D6">Édition 2026-2027</span>
+</div>
+
+<div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 0">
+<div class="a-up" style="width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 28px">
+
+<sc-if value="{{isSuccess}}" hint-placeholder-val="{{ false }}">
+<div role="status" aria-live="polite" style="display: flex; flex-direction: column; align-items: flex-start; gap: 20px">
+<div style="width: 72px; height: 72px; border-radius: 50%; background: #FFB547; color: #040917; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 60px rgba(255,181,71,0.5)">
+<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></div>
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 40px; line-height: 1; letter-spacing: -0.02em">C'est parti&nbsp;!</h1>
+<p style="margin: 0; color: #C9D5EC; font-size: 18px">Connexion réussie. Direction ton questionnaire.</p>
+<button type="button" onClick="{{backToForm}}" class="lx-link" style="cursor: pointer; font: inherit; font-weight: 700; color: #FFB547; background: none; border: 0; padding: 0; min-height: 44px; text-decoration: underline">Revenir au formulaire (démo)</button>
+</div>
+</sc-if>
+
+<sc-if value="{{isForm}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(36px, 4vw, 48px); line-height: 1; letter-spacing: -0.03em">Connexion</h1>
+<p style="margin: 0; color: #C9D5EC; font-size: 18px">Saisis l'identifiant remis par l'équipe d'organisation.</p>
+</div>
+
+<sc-if value="{{showServerError}}" hint-placeholder-val="{{ false }}">
+<div role="alert" class="a-shake" style="display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 16px; background: rgba(255,107,107,0.10); border: 1px solid rgba(255,107,107,0.5); color: #FFC9C9">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF8A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 2px"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+<span><strong style="color: #FFFFFF">Identifiant ou mot de passe incorrect.</strong> Vérifie les majuscules et réessaie.</span>
+</div>
+</sc-if>
+
+<form onSubmit="{{onSubmit}}" novalidate="novalidate" style="display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="lx-id" style="font-weight: 800; font-size: 15px">Identifiant <span aria-hidden="true" style="color: #FFB547">*</span></label>
+<div style="position: relative">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A9B8D6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); pointer-events: none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+<input id="lx-id" name="username" type="text" class="lx-input" autocomplete="username" autocapitalize="none" spellcheck="false" required="required" aria-required="true" aria-invalid="{{idInvalid}}" aria-describedby="lx-id-msg" value="{{idVal}}" onInput="{{onId}}" style="width: 100%; height: 56px; padding: 0 16px 0 48px; border-radius: 16px; border: 1.5px solid {{idBorder}}; background: #0A1430; color: #FFFFFF; font: inherit; font-size: 17px">
+</div>
+<span id="lx-id-msg" style="font-size: 14px; color: {{idMsgColor}}; min-height: 21px">{{idMsg}}</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="lx-pw" style="font-weight: 800; font-size: 15px">Mot de passe <span aria-hidden="true" style="color: #FFB547">*</span></label>
+<div style="position: relative">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A9B8D6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); pointer-events: none"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+<input id="lx-pw" name="password" type="{{pwType}}" class="lx-input" autocomplete="current-password" required="required" aria-required="true" aria-invalid="{{pwInvalid}}" aria-describedby="lx-pw-msg" value="{{pwVal}}" onInput="{{onPw}}" onKeyUp="{{onKey}}" style="width: 100%; height: 56px; padding: 0 60px 0 48px; border-radius: 16px; border: 1.5px solid {{pwBorder}}; background: #0A1430; color: #FFFFFF; font: inherit; font-size: 17px">
+<button type="button" class="lx-eye" onClick="{{togglePw}}" aria-label="{{eyeLabel}}" aria-pressed="{{eyePressed}}" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 12px; border: 0; background: transparent; color: #C9D5EC; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<sc-if value="{{pwShown}}" hint-placeholder-val="{{ false }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path><path d="M1 1l22 22"></path></svg>
+</sc-if>
+<sc-if value="{{pwHidden}}" hint-placeholder-val="{{ true }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+</sc-if>
+</button>
+</div>
+<span id="lx-pw-msg" style="font-size: 14px; color: {{pwMsgColor}}; min-height: 21px">{{pwMsg}}</span>
+</div>
+
+<button type="submit" class="lx-btn" disabled="{{loading}}" aria-busy="{{loadingStr}}" style="cursor: pointer; font: inherit; font-weight: 800; font-size: 18px; height: 60px; border-radius: 999px; border: 0; background: #FFB547; color: #040917; display: inline-flex; align-items: center; justify-content: center; gap: 12px">
+<sc-if value="{{loading}}" hint-placeholder-val="{{ false }}">
+<span class="a-loader" aria-hidden="true" style="width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid rgba(4,9,23,0.25); border-top-color: #040917"></span>
+</sc-if>
+{{submitLabel}}
+</button>
+</form>
+
+<div style="display: flex; gap: 14px; align-items: flex-start; padding: 18px 20px; border-radius: 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5B9BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 3px"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>
+<p style="margin: 0; color: #C9D5EC; font-size: 15px"><strong style="color: #FFFFFF">Identifiant perdu ?</strong> Contacte l'équipe d'organisation, elle te le renverra.</p>
+</div>
+</sc-if>
+</div>
+</div>
+
+<footer style="font-size: 14px; color: #A9B8D6; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px">
+<span>Parrainage MIAGE — L1 × L3 · 2026-2027</span>
+<span>Les binômes sont dévoilés le jour de la révélation.</span>
+</footer>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"deadline":{"editor":"text","default":"2026-10-31T23:59:00","section":"Compte à rebours"},"demoError":{"editor":"boolean","default":false,"section":"Démo"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { now: Date.now(), id: '', pw: '', touched: false, showPw: false, caps: false, loading: false, success: false, failed: false };
+  }
+  componentDidMount() { this._t = setInterval(() => this.setState({ now: Date.now() }), 1000); }
+  componentWillUnmount() { clearInterval(this._t); clearTimeout(this._s); }
+  renderVals() {
+    var self = this, st = this.state;
+    var end = new Date(this.props.deadline ?? '2026-10-31T23:59:00').getTime();
+    var diff = isNaN(end) ? -1 : end - st.now;
+    var pad = function (n) { return n < 10 ? '0' + n : String(n); };
+    var cdLabel = 'Clôture dans', cdValue = '—';
+    if (diff > 0) {
+      var t = Math.floor(diff / 1000);
+      cdValue = Math.floor(t / 86400) + 'j ' + pad(Math.floor((t % 86400) / 3600)) + 'h ' + pad(Math.floor((t % 3600) / 60)) + 'm ' + pad(t % 60) + 's';
+    } else if (!isNaN(end)) { cdLabel = 'Inscriptions'; cdValue = 'closes'; }
+
+    var idErr = st.touched && !st.id.trim();
+    var pwErr = st.touched && !st.pw;
+    var serverErr = (this.props.demoError ?? false) || st.failed;
+    var red = '#FF8A8A', base = 'rgba(255,255,255,0.18)';
+    return {
+      cdLabel: cdLabel, cdValue: cdValue,
+      isForm: !st.success, isSuccess: st.success,
+      showServerError: serverErr && !idErr && !pwErr,
+      idVal: st.id, pwVal: st.pw,
+      onId: function (e) { self.setState({ id: e.target.value, failed: false }); },
+      onPw: function (e) { self.setState({ pw: e.target.value, failed: false }); },
+      onKey: function (e) { try { self.setState({ caps: e.getModifierState('CapsLock') }); } catch (x) {} },
+      idInvalid: idErr ? 'true' : 'false', pwInvalid: pwErr ? 'true' : 'false',
+      idBorder: idErr || serverErr ? red : base, pwBorder: pwErr || serverErr ? red : base,
+      idMsg: idErr ? 'Indique ton identifiant.' : 'Ex. : celui reçu de l’équipe (sensible à la casse).',
+      idMsgColor: idErr ? red : '#A9B8D6',
+      pwMsg: pwErr ? 'Indique ton mot de passe.' : (st.caps ? 'Attention : la touche Verr. Maj est activée.' : ''),
+      pwMsgColor: pwErr ? red : (st.caps ? '#FFCF85' : '#A9B8D6'),
+      pwType: st.showPw ? 'text' : 'password',
+      pwShown: st.showPw, pwHidden: !st.showPw,
+      eyeLabel: st.showPw ? 'Masquer le mot de passe' : 'Afficher le mot de passe',
+      eyePressed: st.showPw ? 'true' : 'false',
+      togglePw: function () { self.setState({ showPw: !self.state.showPw }); },
+      loading: st.loading, loadingStr: st.loading ? 'true' : 'false',
+      submitLabel: st.loading ? 'Connexion…' : 'Se connecter',
+      onSubmit: function (e) {
+        e.preventDefault();
+        self.setState({ touched: true });
+        if (!self.state.id.trim() || !self.state.pw) {
+          var f = !self.state.id.trim() ? 'lx-id' : 'lx-pw';
+          try { document.getElementById(f).focus(); } catch (x) {}
+          return;
+        }
+        self.setState({ loading: true, failed: false });
+        self._s = setTimeout(function () {
+          if (self.props.demoError) self.setState({ loading: false, failed: true });
+          else self.setState({ loading: false, success: true });
+        }, 1200);
+      },
+      backToForm: function () { self.setState({ success: false, pw: '', touched: false }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,336 +1,187 @@
-{% extends "base.html" %}
-{% block title %}La révélation{% endblock %}
-
-{% block styles %}
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#040917">
+<title>La révélation — Parrainage MIAGE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'parrainage/css/style.css' %}">
 <style>
-    /* ================================================================
-       MODE PROJECTION — un binôme à la fois
-       ================================================================ */
-    body { overflow-x: hidden; }
-
-    .scene {
-        position: relative;
-        min-height: 78vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        padding: 1rem;
-    }
-
-    /* ---------- Écran d'accueil ---------- */
-    .accueil-revelation { animation: apparaitre .5s var(--ease) both; }
-    .accueil-titre {
-        font-size: clamp(1.8rem, 5vw, 3.2rem);
-        font-weight: 800;
-        color: var(--marine);
-        line-height: 1.1;
-    }
-
-    /* ---------- Compteur de sauvegarde ---------- */
-    .barre-projection {
-        position: sticky;
-        top: 0;
-        z-index: 1040;
-        background: var(--marine);
-        color: #fff;
-        padding: .55rem 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: .85rem;
-        border-bottom: 3px solid var(--jaune);
-    }
-    .barre-projection .avancement {
-        font-variant-numeric: tabular-nums;
-        font-weight: 700;
-    }
-
-    /* ---------- La carte du binôme ---------- */
-    .carte-scene {
-        width: min(940px, 95vw);
-        background: var(--blanc);
-        border-radius: 1.1rem;
-        border: 1px solid var(--gris-bord);
-        border-top: 6px solid var(--jaune);
-        box-shadow: 0 18px 50px rgba(1, 47, 107, .22);
-        overflow: hidden;
-        animation: apparaitre .5s var(--ease) both;
-    }
-    .carte-scene.revient { animation: apparaitreRetour .4s var(--ease) both; }
-    @keyframes apparaitreRetour {
-        from { opacity: 0; transform: translateX(-26px); }
-        to   { opacity: 1; transform: none; }
-    }
-
-    /* En-tête : le parrain / la marraine */
-    .scene-parrain {
-        background: var(--marine);
-        color: #fff;
-        padding: 1.6rem 1.5rem 1.3rem;
-        position: relative;
-        overflow: hidden;
-    }
-    .scene-parrain::after {
-        content: '';
-        position: absolute;
-        width: 300px; height: 300px;
-        right: -110px; top: -140px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(255,199,44,.28), transparent 70%);
-        pointer-events: none;
-    }
-    .etiquette-parrain {
-        font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
-        color: var(--jaune); font-weight: 700;
-    }
-    .nom-principal {
-        font-family: 'Sora', sans-serif;
-        font-size: clamp(1.5rem, 4vw, 2.6rem);
-        font-weight: 800;
-        margin: .35rem 0 0;
-        line-height: 1.1;
-    }
-
-    /* Photos */
-    .portrait {
-        width: clamp(96px, 17vw, 150px);
-        height: clamp(96px, 17vw, 150px);
-        border-radius: 50%;
-        object-fit: cover;
-        border: 5px solid var(--jaune);
-        box-shadow: 0 12px 30px rgba(1, 47, 107, .3);
-        background: var(--blanc);
-    }
-    .portrait-vide {
-        display: grid; place-items: center;
-        background: var(--jaune);
-        color: var(--marine);
-        font-family: 'Sora', sans-serif;
-        font-weight: 800;
-        font-size: clamp(2rem, 5vw, 3rem);
-    }
-
-    /* Les filleuls */
-    .scene-filleul {
-        padding: 1.5rem;
-        border-bottom: 1px solid var(--gris-bord);
-        animation: apparaitre .45s var(--ease) both;
-    }
-    .scene-filleul:last-of-type { border-bottom: none; }
-    .fleche {
-        font-size: 1.8rem; color: var(--jaune); line-height: 1;
-        font-weight: 800;
-    }
-
-    /* Score */
-    .score-scene {
-        font-family: 'Sora', sans-serif;
-        font-size: clamp(2.2rem, 6vw, 3.6rem);
-        font-weight: 800;
-        color: var(--marine);
-        line-height: 1;
-        font-variant-numeric: tabular-nums;
-    }
-    .jauge {
-        height: 10px; border-radius: 999px;
-        background: #e6eaf3; overflow: hidden;
-        margin-top: .5rem;
-    }
-    .jauge > div {
-        height: 100%; width: 0;
-        background: var(--jaune);
-        border-radius: 999px;
-        transition: width .9s cubic-bezier(.22,.61,.36,1);
-    }
-
-    /* Message de bienvenue (Q25) */
-    .mot-binome {
-        background: #f7f9fd;
-        border-left: 4px solid var(--jaune);
-        border-radius: .5rem;
-        padding: .8rem 1rem;
-        font-style: italic;
-        color: var(--marine);
-        text-align: left;
-    }
-
-    /* ---------- Commandes ---------- */
-    .commandes {
-        position: fixed;
-        bottom: 1rem; left: 50%;
-        transform: translateX(-50%);
-        z-index: 1050;
-        display: flex;
-        gap: .6rem;
-        align-items: center;
-        background: rgba(255,255,255,.96);
-        border: 1px solid var(--gris-bord);
-        border-radius: 999px;
-        padding: .45rem .6rem;
-        box-shadow: 0 8px 26px rgba(1, 47, 107, .18);
-    }
-    .commandes .indice-touche {
-        font-size: .75rem; color: var(--texte-doux); padding: 0 .4rem;
-    }
-    kbd {
-        background: var(--marine); color: #fff;
-        border-radius: .25rem; padding: .1rem .35rem;
-        font-size: .7rem; font-family: inherit;
-    }
-
-    /* ---------- Écran final ---------- */
-    .final-titre {
-        font-family: 'Sora', sans-serif;
-        font-size: clamp(2rem, 6vw, 3.6rem);
-        font-weight: 800;
-        color: var(--marine);
-    }
-
-    @media print {
-        .commandes, .barre-projection { display: none !important; }
-        body { background: #fff; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-        .carte-scene, .scene-filleul { animation: none !important; }
-    }
-
-    /* ---------------- Thème sombre ---------------- */
-    .accueil-titre { color: var(--texte); }
-    .carte-scene { background: var(--surface); border-color: var(--bord-doux); }
-    .portrait { background: var(--surface); }
-    .scene-filleul { border-bottom-color: var(--bord-doux); }
-    .score-scene { color: var(--texte); }
-    .jauge { background: #16223f; }
-    .mot-binome { background: var(--surface-2); color: var(--texte); }
-    .commandes { background: rgba(10, 20, 48, .96); border-color: var(--bord-doux); }
-    .final-titre { color: var(--texte); }
-    kbd { background: var(--marine-clair); color: #fff; }
+  body { overflow-x: hidden; }
+  .scene {
+    position: relative; min-height: 80vh; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center; padding: 24px;
+  }
+  .barre-projection {
+    position: sticky; top: 0; z-index: 1040; background: #012F6B; color: #fff;
+    padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: 14px; border-bottom: 3px solid #FFB547;
+  }
+  .carte-scene {
+    width: min(940px, 95vw); border-radius: 28px; background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.12); border-top: 6px solid #FFB547; overflow: hidden;
+    animation: px-pop .55s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .carte-scene.revient { animation: px-up .45s cubic-bezier(.2,.8,.2,1) both; }
+  .scene-parrain { background: #012F6B; color: #fff; padding: 40px 24px 32px; position: relative; overflow: hidden; }
+  .scene-parrain::after {
+    content: ''; position: absolute; width: 320px; height: 320px; right: -130px; top: -150px;
+    border-radius: 50%; background: radial-gradient(circle, rgba(255,181,71,.30), transparent 70%); pointer-events: none;
+  }
+  .etiquette-parrain {
+    font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #FFCF85; font-weight: 800;
+  }
+  .nom-principal {
+    font-family: var(--font-display); font-size: clamp(28px, 4.6vw, 52px); font-weight: 900;
+    margin: 8px 0 0; line-height: 1.05;
+  }
+  .portrait {
+    width: clamp(100px, 18vw, 160px); height: clamp(100px, 18vw, 160px); border-radius: 50%;
+    object-fit: cover; border: 5px solid #FFB547; box-shadow: 0 0 50px rgba(255,181,71,.4); background: #0A1838;
+  }
+  .portrait-vide {
+    display: grid; place-items: center; background: #FFB547; color: #040917;
+    font-family: var(--font-display); font-weight: 900; font-size: clamp(34px, 5vw, 52px);
+  }
+  .scene-filleul { padding: 28px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .scene-filleul:last-of-type { border-bottom: none; }
+  .fleche { font-size: 28px; color: #FFB547; line-height: 1; font-weight: 800; }
+  .score-scene {
+    font-family: var(--font-display); font-size: clamp(40px, 7vw, 72px); font-weight: 900;
+    color: #FFB547; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 0 40px rgba(255,181,71,.5);
+  }
+  .jauge { height: 10px; border-radius: 999px; background: rgba(255,255,255,0.10); overflow: hidden; margin-top: 12px; }
+  .jauge > div { height: 100%; width: 0; background: #FFB547; border-radius: 999px; transition: width .9s cubic-bezier(.22,.61,.36,1); }
+  .mot-binome {
+    background: rgba(255,181,71,0.07); border-left: 4px solid #FFB547; border-radius: 12px;
+    padding: 14px 16px; font-style: italic; color: #DCE6F5; text-align: left;
+  }
+  .commandes {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 1050;
+    display: flex; gap: 8px; align-items: center; background: rgba(10,20,48,0.92);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 999px; padding: 8px 10px;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  kbd {
+    background: #012F6B; color: #fff; border-radius: 8px; padding: 3px 8px;
+    font-family: var(--font-mono); font-size: 12px;
+  }
+  .final-titre {
+    font-family: var(--font-display); font-size: clamp(32px, 6vw, 60px); font-weight: 900;
+    color: #F2F5FB;
+  }
+  @media print {
+    .commandes, .barre-projection { display: none !important; }
+    body { background: #fff; }
+  }
 </style>
-{% endblock %}
+</head>
+<body>
 
-{% block content %}
 <div class="barre-projection no-print">
-    <span><i class="bi bi-stars"></i> Révélation</span>
-    <span class="avancement" data-avancement>— / {{ groupes|length }}</span>
+  <span>⭐ Révélation</span>
+  <span data-avancement>— / {{ groupes|length }}</span>
 </div>
 
 <div class="scene" id="scene">
 
-    {# ---------------- Écran d'accueil ---------------- #}
-    <div class="accueil-revelation text-center" id="accueil">
-        <div class="display-1 mb-3">🎉</div>
-        <p class="etiquette-parrain mb-2">Parrainage MIAGE · L1 × L3</p>
-        <h1 class="accueil-titre mb-4">La grande révélation</h1>
-        <p class="texte-doux fs-5 mb-4">
-            {{ stats.l1_places }} binôme{{ stats.l1_places|pluralize }} à découvrir
-        </p>
-        <button class="btn btn-jaune btn-lg px-5" id="btn-commencer">
-            <i class="bi bi-play-fill"></i> Commencer
-        </button>
-        <p class="texte-doux small mt-4 mb-0">
-            Barre <kbd>espace</kbd> ou clic pour avancer · <kbd>←</kbd> pour revenir
-        </p>
+  {# ---------------- Écran d'accueil ---------------- #}
+  <div id="accueil">
+    <div class="a-pop" style="font-size: 72px">🎉</div>
+    <p class="etiquette-parrain" style="margin: 18px 0 10px">Parrainage MIAGE · L1 × L3</p>
+    <h1 class="final-titre" style="margin: 0 0 20px">La grande révélation</h1>
+    <p style="color: #C9D5EC; font-size: 19px; margin: 0 0 28px">
+      {{ stats.l1_places }} binôme{{ stats.l1_places|pluralize }} à découvrir
+    </p>
+    <button class="px-btn btn-primary btn-lg" id="btn-commencer">Commencer
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></button>
+    <p style="color: #A9B8D6; font-size: 14px; margin: 28px 0 0">
+      Barre <kbd>espace</kbd> ou clic pour avancer · <kbd>←</kbd> pour revenir
+    </p>
+  </div>
+
+  {# ---------------- Les cartes, une par une ---------------- #}
+  {% for groupe in groupes %}
+  <div class="carte-scene" data-bloc="{{ forloop.counter0 }}" hidden>
+    <div class="scene-parrain">
+      {% if groupe.l3.a_une_photo %}
+        <img src="{{ groupe.l3.photo.url }}" alt="" class="portrait" style="margin-bottom: 16px">
+      {% else %}
+        <div class="portrait portrait-vide" style="margin-bottom: 16px">{{ groupe.l3.initiales }}</div>
+      {% endif %}
+      <div class="etiquette-parrain">Parrain / Marraine</div>
+      <h2 class="nom-principal">{{ groupe.l3.prenom }} {{ groupe.l3.nom }}</h2>
+      <div style="margin-top: 8px; color: rgba(255,255,255,.75); font-size: 15px">
+        {{ groupe.l3.groupe|default:groupe.l3.niveau }}
+      </div>
     </div>
 
-    {# ---------------- Les cartes, une par une ---------------- #}
-    {% for groupe in groupes %}
-    <div class="carte-scene" data-bloc="{{ forloop.counter0 }}" hidden>
-        <div class="scene-parrain text-center">
-            {% if groupe.l3.a_une_photo %}
-                <img src="{{ groupe.l3.photo.url }}" alt="" class="portrait mb-3">
-            {% else %}
-                <div class="portrait portrait-vide mb-3">{{ groupe.l3.initiales }}</div>
-            {% endif %}
-            <div class="etiquette-parrain">Parrain / Marraine</div>
-            <h2 class="nom-principal">{{ groupe.l3.prenom }} {{ groupe.l3.nom }}</h2>
-            <div class="small mt-2" style="color: rgba(255,255,255,.75);">
-                {{ groupe.l3.groupe|default:groupe.l3.niveau }}
-            </div>
-        </div>
+    <div class="scene-filleul">
+      <div class="fleche" style="margin-bottom: 12px">↓</div>
+      <div class="etiquette-parrain" style="color: #C9D5EC">
+        Accompagne {{ groupe.nb_filleuls }} filleul{{ groupe.nb_filleuls|pluralize }}
+      </div>
+    </div>
 
-        <div class="scene-filleul">
-            <div class="fleche mb-3">↓</div>
-            <div class="etiquette-parrain" style="color: var(--texte-doux);">
-                Accompagne {{ groupe.nb_filleuls }} filleul{{ groupe.nb_filleuls|pluralize }}
-            </div>
-        </div>
-
-        {% for f in groupe.filleuls %}
-        <div class="scene-filleul">
-            <div class="d-flex align-items-center justify-content-center gap-4 flex-wrap">
-                <div class="text-center">
-                    {% if f.l1.a_une_photo %}
-                        <img src="{{ f.l1.photo.url }}" alt="" class="portrait">
-                    {% else %}
-                        <div class="portrait portrait-vide">{{ f.l1.initiales }}</div>
-                    {% endif %}
-                </div>
-                <div class="text-center text-md-start">
-                    <div class="etiquette-parrain" style="color: var(--texte-doux);">Filleul / Filleule</div>
-                    <h3 class="nom-principal" style="color: var(--marine); font-size: clamp(1.2rem, 3vw, 1.9rem);">
-                        {{ f.l1.prenom }} {{ f.l1.nom }}
-                    </h3>
-                    <span class="badge badge-doux">{{ f.l1.groupe|default:f.l1.niveau }}</span>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-
-        {# Le message anonyme qu'il/elle avait laissé (Q25) #}
-        {% if groupe.message %}
-        <div class="scene-filleul">
-            <div class="etiquette-parrain mb-2" style="color: var(--texte-doux);">
-                <i class="bi bi-envelope-paper"></i> Son message, écrit avant de te connaître
-            </div>
-            <p class="mot-binome mb-0">« {{ groupe.message }} »</p>
-        </div>
+    {% for f in groupe.filleuls %}
+    <div class="scene-filleul">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap">
+        {% if f.l1.a_une_photo %}
+          <img src="{{ f.l1.photo.url }}" alt="" class="portrait" style="width: 92px; height: 92px; border-width: 4px">
+        {% else %}
+          <div class="portrait portrait-vide" style="width: 92px; height: 92px; font-size: 26px; border-width: 4px">{{ f.l1.initiales }}</div>
         {% endif %}
-
-        <div class="scene-filleul bg-white">
-            <div class="etiquette-parrain mb-1" style="color: var(--texte-doux);">
-                Score de compatibilité
-            </div>
-            <div class="score-scene">{{ groupe.score_moyen }}<span class="fs-4 texte-doux">/100</span></div>
-            <div class="jauge mx-auto" style="max-width: 420px;">
-                <div data-jauge="{{ groupe.score_moyen }}"></div>
-            </div>
+        <div style="text-align: left">
+          <div class="etiquette-parrain" style="color: #C9D5EC">Filleul / Filleule</div>
+          <h3 class="nom-principal" style="font-size: clamp(22px, 3vw, 32px)">{{ f.l1.prenom }} {{ f.l1.nom }}</h3>
+          <div style="color: #A9B8D6; font-size: 14px; margin-top: 4px">{{ f.l1.groupe|default:f.l1.niveau }}</div>
         </div>
+      </div>
     </div>
     {% endfor %}
 
-    {# ---------------- Écran final ---------------- #}
-    <div class="accueil-revelation text-center" id="final" hidden>
-        <div class="display-1 mb-3">💛</div>
-        <h1 class="final-titre mb-3">Belle route à tous les binômes !</h1>
-        <p class="texte-doux fs-5 mb-4">
-            {{ stats.l1_places }} binôme{{ stats.l1_places|pluralize }} formé{{ stats.l1_places|pluralize }} cette année.
-        </p>
-        <button class="btn btn-contour-marine" id="btn-revoir">
-            <i class="bi bi-arrow-repeat"></i> Revoir depuis le début
-        </button>
+    {% if groupe.message %}
+    <div class="scene-filleul">
+      <div class="etiquette-parrain" style="color: #C9D5EC; margin-bottom: 10px">💌 Son message, écrit avant de te connaître</div>
+      <p class="mot-binome" style="margin: 0">« {{ groupe.message }} »</p>
     </div>
+    {% endif %}
+
+    <div class="scene-filleul">
+      <div class="etiquette-parrain" style="color: #C9D5EC; margin-bottom: 6px">Score de compatibilité</div>
+      <div class="score-scene">{{ groupe.score_moyen }}<span style="font-size: 22px; color: #A9B8D6">/100</span></div>
+      <div class="jauge" style="max-width: 420px; margin-left: auto; margin-right: auto;">
+        <div data-jauge="{{ groupe.score_moyen }}"></div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  {# ---------------- Écran final ---------------- #}
+  <div id="final" hidden>
+    <div class="a-pop" style="font-size: 72px">💛</div>
+    <h1 class="final-titre" style="margin: 20px 0">Belle route à tous les binômes !</h1>
+    <p style="color: #C9D5EC; font-size: 19px; margin: 0 0 28px">
+      {{ stats.l1_places }} binôme{{ stats.l1_places|pluralize }} formé{{ stats.l1_places|pluralize }} cette année.
+    </p>
+    <button class="px-btn px-ghost btn-ghost btn-md" id="btn-revoir">Revoir depuis le début</button>
+  </div>
 </div>
 
 {# ---------------- Commandes ---------------- #}
 <div class="commandes no-print" id="commandes" hidden>
-    <button class="btn btn-contour-marine btn-sm" id="btn-precedent">
-        <i class="bi bi-arrow-left"></i> Précédent
-    </button>
-    <span class="indice-touche d-none d-md-inline">
-        <kbd>espace</kbd> suivant
-    </span>
-    <button class="btn btn-jaune btn-sm px-3" id="btn-suivant">
-        Suivant <i class="bi bi-arrow-right"></i>
-    </button>
-    <button class="btn btn-outline-secondary btn-sm" id="btn-plein-ecran" title="Plein écran">
-        <i class="bi bi-arrows-fullscreen"></i>
-    </button>
+  <button class="px-btn px-ghost btn-ghost btn-sm" id="btn-precedent">Précédent</button>
+  <span style="color: #A9B8D6; font-size: 13px; padding: 0 6px"><kbd>espace</kbd> suivant</span>
+  <button class="px-btn btn-primary btn-sm" id="btn-suivant">Suivant
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></button>
+  <button class="px-btn px-ghost btn-ghost btn-sm" id="btn-plein-ecran" title="Plein écran" style="padding: 10px 14px">⛶</button>
 </div>
-{% endblock %}
 
-{% block scripts %}
+<script src="{% static 'parrainage/js/common.js' %}"></script>
 <script>
 (function () {
     const accueil = document.getElementById('accueil');
@@ -344,7 +195,6 @@
     const btnPrecedent = document.getElementById('btn-precedent');
     const btnPleinEcran = document.getElementById('btn-plein-ecran');
 
-    // -1 = écran d'accueil, cartes.length = écran final
     let index = -1;
 
     function total() { return cartes.length; }
@@ -377,7 +227,6 @@
         commandes.hidden = false;
         avancement.textContent = (numero + 1) + ' / ' + total();
 
-        // La jauge se remplit une fois la carte affichée.
         const jauge = carte.querySelector('[data-jauge]');
         if (jauge) {
             const valeur = jauge.getAttribute('data-jauge');
@@ -388,8 +237,8 @@
 
         btnPrecedent.disabled = numero === 0;
         btnSuivant.innerHTML = (numero === total() - 1)
-            ? 'Terminer <i class="bi bi-check2"></i>'
-            : 'Suivant <i class="bi bi-arrow-right"></i>';
+            ? 'Terminer'
+            : 'Suivant';
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -402,14 +251,12 @@
     btnPrecedent.addEventListener('click', precedent);
     btnRevoir.addEventListener('click', () => afficher(0));
 
-    // Clic n'importe où sur la scène : avance (sauf sur un bouton).
     document.getElementById('scene').addEventListener('click', (e) => {
         if (e.target.closest('button')) return;
-        if (index === -1) return;          // l'accueil a son propre bouton
+        if (index === -1) return;
         suivant();
     });
 
-    // Clavier : espace / flèches / Échap
     document.addEventListener('keydown', (e) => {
         if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'PageDown') {
             e.preventDefault();
@@ -424,7 +271,6 @@
         }
     });
 
-    // Plein écran
     btnPleinEcran.addEventListener('click', () => {
         if (document.fullscreenElement) {
             document.exitFullscreen();
@@ -436,4 +282,5 @@
     afficher(-1);
 })();
 </script>
-{% endblock %}
+</body>
+</html>
