@@ -15,41 +15,41 @@
      --------------------------------------------------------- */
   var QUESTIONS = [
     {
-      label: 'Un contrôle dans 3 jours. Tu fais quoi ?',
+      label: 'Ton réflexe quand un devoir tombe demain ?',
       options: [
-        'Fiches prêtes depuis longtemps 😌',
-        'Je révise à fond la veille, café serré ☕',
-        '3 jours ? Quelqu’un peut me résumer ? 💀'
+        'MIAGE, c’est famille (donc je compte sur ma famille)',
+        'Chacun pour soi, Dieu pour tous',
+        'C’est le dernier étudiant qui fait minute'
       ]
     },
     {
-      label: 'Le spot où tu traînes le plus ?',
+      label: 'Ton coin préféré pour grailler ?',
       options: [
-        'La BU, mon sanctuaire silencieux',
-        'La cafét’, le vrai bureau de la promo',
-        'Le foyer ou la salle info'
+        'Chez Edmond',
+        'Chez Adjara panini',
+        'Un peu partout'
       ]
     },
     {
-      label: 'Ton week-end de rêve ?',
+      label: 'Cours à 8h, tu quittes la maison à 7h30. Tu fais quoi ?',
       options: [
-        'Sortie, musique, on rentre tard',
-        'Sport, grand air, on bouge',
-        'Plaid, série, zéro bruit'
+        'Le retard, c’est mon champ',
+        'Wouuu, je file, faut pas qu’ils ferment le portail sur moi !',
+        'C’est quoi qui est cours, là ???'
       ]
     }
   ];
   // Archétype = PROFIL[réponse Q1] + STYLE[réponse Q3]
-  var PROFIL = ['Stratège', 'Marathonien·ne', 'Improviste'];
-  var STYLE = ['des sorties', 'du grand air', 'du canapé'];
+  var PROFIL = ['Solidaire', 'Franc-tireur', 'Dernière minute'];
+  var STYLE = ['toujours en retard', 'toujours pressé·e', 'toujours à l’ouest'];
   var DESCRIPTIONS = [
-    'Tu prends les devants et tu aimes comprendre avant d’agir. Ton QG : ',
-    'Tu donnes tout au dernier moment, et souvent ça passe. Ton QG : ',
-    'Tu improvises, et tu trouves toujours une porte de sortie. Ton QG : '
+    'Tu comptes sur les autres, et les autres comptent sur toi. Ton QG : ',
+    'Tu avances seul·e, à ta façon. Ton QG : ',
+    'Tu repousses tout au dernier moment… et ça passe quand même. Ton QG : '
   ];
   var L3_IDEAL = [
-    'un·e L3 qui partage ses fiches, ses méthodes et ses bons plans.',
-    'un·e L3 qui garde la tête froide quand tout s’accélère.',
+    'un·e L3 qui te présente la promo et te file un coup de main.',
+    'un·e L3 qui te laisse ton espace, mais répond quand tu bloques.',
     'un·e L3 qui t’aide à anticiper… au moins un peu.'
   ];
   var VERDICTS = ['DUO EXPLOSIF', 'BINÔME DE LÉGENDE', 'COMPATIBILITÉ REDOUTABLE'];
