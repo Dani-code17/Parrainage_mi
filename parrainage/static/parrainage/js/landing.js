@@ -43,8 +43,8 @@
     var seen = false;
     try { seen = sessionStorage.getItem('pm-intro') === '1'; } catch (e) {}
     if (!reduce && !seen) {
-      intro.hidden = false;
-      var closeIntro = function () { intro.hidden = true; clearTimeout(introTimer); };
+      intro.style.display = 'flex';
+      var closeIntro = function () { intro.style.display = 'none'; clearTimeout(introTimer); };
       var introTimer = setTimeout(closeIntro, 3400);
       $('#skip-intro').addEventListener('click', closeIntro);
       document.addEventListener('keydown', function onEsc(e) {
