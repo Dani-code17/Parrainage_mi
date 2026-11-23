@@ -123,6 +123,23 @@
         border-radius: .4rem; padding: .7rem .9rem; font-weight: 600;
         color: var(--marine);
     }
+
+    /* ---------------- Thème sombre ---------------- */
+    .quiz-progression { background: var(--surface); border-color: var(--bord-doux); }
+    .quiz-progression .piste { background: #16223f; }
+    .quiz-progression .compteur { color: var(--texte); }
+    .question { background: var(--surface); border-color: var(--bord-doux); }
+    .question h3 { color: var(--texte); }
+    .question .section-nom { color: #ffd08a; background: #16223f; }
+    .question .etiquette-facultatif { background: #16223f; color: var(--texte-doux); }
+    .option { border-color: #26355c; color: var(--texte); }
+    .option:hover { background: var(--surface-2); border-color: var(--accent-2); }
+    .option .puce { border-color: #3a4a70; }
+    .option .puce i { color: #08122a; }
+    .option.choisie { border-color: var(--jaune); background: #1a2340; }
+    .option.choisie .puce { border-color: var(--jaune); background: var(--jaune); }
+    .note-valeur { color: var(--texte); }
+    .reponse-figee { background: var(--surface-2); color: var(--texte); }
 </style>
 {% endblock %}
 

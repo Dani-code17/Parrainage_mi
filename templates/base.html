@@ -628,6 +628,173 @@
             0%   { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
             100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
         }
+
+        /* ===================================================================
+           THÈME SOMBRE
+           Palette relevée sur la maquette :
+             fond #040917 · surfaces #0a1430 · bleu #012f6b
+             accent ambre #ffb547 · accent bleu clair #5b9bff · texte #f2f5fb
+           =================================================================== */
+        :root {
+            --marine:        #012f6b;
+            --marine-fonce:  #011f47;
+            --marine-clair:  #02498f;
+            --jaune:         #ffb547;
+            --jaune-clair:   #ffd08a;
+            --blanc:         #f5f7fc;
+            --gris-fond:     #040917;
+            --gris-bord:     #1b2745;
+            --texte:         #f2f5fb;
+            --texte-doux:    #9397a1;
+            --vert:          #35c07a;
+
+            --surface:       #0a1430;
+            --surface-2:     #0e1a3a;
+            --surface-3:     #132247;
+            --accent-2:      #5b9bff;
+            --bord-doux:     #1b2745;
+
+            --degrade-marine: #012f6b;
+            --degrade-jaune:  #ffb547;
+
+            --ombre:         0 1px 2px rgba(0, 0, 0, .45);
+            --ombre-carte:   0 4px 18px rgba(0, 0, 0, .38);
+            --ombre-forte:   0 14px 36px rgba(0, 0, 0, .55);
+        }
+
+        body { background: var(--gris-fond); color: var(--texte); }
+        a { color: var(--accent-2); }
+        a:hover { color: #86b6ff; }
+
+        /* --- Barre haute --- */
+        .barre-haut { background: var(--marine); border-bottom: 3px solid var(--jaune); }
+        .barre-haut.defilee { box-shadow: 0 8px 24px rgba(0, 0, 0, .55); }
+        .barre-haut .nav-link { color: rgba(242, 245, 251, .78); }
+        .barre-haut .nav-link:hover,
+        .barre-haut .nav-link.actif { color: #fff; background: rgba(255, 255, 255, .10); }
+        .marque { color: #fff; }
+        .marque .logo-marque { background: #fff; border-radius: .3rem; }
+
+        /* --- Surfaces --- */
+        .carte,
+        .compteur,
+        .carte-binome,
+        .barre-progression {
+            background: var(--surface);
+            border-color: var(--bord-doux);
+            color: var(--texte);
+        }
+        .carte-entete { background: var(--surface-2); border-bottom-color: var(--bord-doux); color: var(--texte); }
+        .carte-hover:hover { border-color: var(--marine-clair); }
+        .carte-halo:hover { border-color: var(--marine-clair); }
+        .carte-binome:hover { border-color: var(--marine-clair); }
+
+        /* --- Textes --- */
+        .texte-marine { color: var(--texte); }
+        .texte-doux  { color: var(--texte-doux); }
+        .text-muted  { color: var(--texte-doux) !important; }
+        .fond-jaune  { background: rgba(255, 181, 71, .14); color: var(--texte); }
+
+        /* --- En-têtes --- */
+        .entete-page, .hero { background: var(--marine); color: #fff; }
+        .entete-page .sous-titre { color: rgba(255, 255, 255, .82); }
+
+        /* --- Boutons --- */
+        .btn-jaune {
+            background: var(--jaune);
+            border-color: var(--jaune);
+            color: #08122a;
+        }
+        .btn-jaune:hover, .btn-jaune:focus {
+            background: #ffc670;
+            border-color: #ffc670;
+            color: #08122a;
+            box-shadow: 0 6px 18px rgba(255, 181, 71, .35);
+        }
+        .btn-marine {
+            background: var(--marine);
+            border-color: var(--marine-clair);
+            color: #fff;
+        }
+        .btn-marine:hover, .btn-marine:focus {
+            background: var(--marine-clair);
+            border-color: var(--marine-clair);
+            color: #fff;
+        }
+        .btn-contour-marine { border-color: var(--accent-2); color: var(--accent-2); }
+        .btn-contour-marine:hover { background: var(--accent-2); border-color: var(--accent-2); color: #04101f; }
+
+        /* --- Formulaires --- */
+        .form-control, .form-select {
+            background-color: var(--surface);
+            border-color: #26355c;
+            color: var(--texte);
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: var(--surface-2);
+            border-color: var(--accent-2);
+            color: var(--texte);
+            box-shadow: 0 0 0 .2rem rgba(91, 155, 255, .20);
+        }
+        .form-control::placeholder { color: #6b7690; }
+        .form-select option { background: var(--surface); color: var(--texte); }
+        .form-select:disabled, .form-control:disabled {
+            background: #0b1225;
+            color: #6b7690;
+            border-color: var(--bord-doux);
+        }
+        .form-label, label { color: var(--texte); }
+        .form-text { color: var(--texte-doux); }
+        .form-check-input { background-color: var(--surface); border-color: #26355c; }
+        .form-check-input:checked { background-color: var(--jaune); border-color: var(--jaune); }
+
+        /* --- Badges --- */
+        .badge-marine { background: var(--marine-clair); color: #fff; }
+        .badge-jaune  { background: var(--jaune); color: #08122a; }
+        .badge-doux   { background: #16223f; color: #b9c3d8; }
+
+        /* --- Compteurs / scores --- */
+        .compteur-valeur { color: var(--texte); }
+        .compteur-label  { color: var(--texte-doux); }
+        .score-gros      { color: var(--texte); }
+        .score-anneau::after { background: var(--surface); }
+        .score-anneau > span { color: var(--texte); }
+
+        /* --- Divers --- */
+        .etape-num { background: var(--jaune); color: #08122a; }
+        .avatar-initiales { background: var(--marine-clair); color: #fff; border-color: var(--jaune); }
+        .barre-progression .piste { background: #16223f; }
+        .ligne-filleul:hover { background: var(--surface-2); }
+        .list-group-item { background: var(--surface); border-color: var(--bord-doux); color: var(--texte); }
+        .pied { background: var(--marine-fonce); color: rgba(242, 245, 251, .65); border-top-color: var(--jaune); }
+        .pied a { color: var(--jaune); }
+        .photo-parrain, .photo-filleul, .photo-entete { border-color: var(--jaune); }
+        .photo-vide { background: var(--jaune); color: #08122a; }
+
+        /* --- Alertes --- */
+        .alert { border: 1px solid var(--bord-doux); color: var(--texte); }
+        .alert-info    { background: #0b1c33; border-color: #1e3a5c; color: #cfe2ff; }
+        .alert-success { background: #0a2318; border-color: #1c5138; color: #b9f0d0; }
+        .alert-warning { background: #2a2010; border-color: #5c4419; color: #ffe3ad; }
+        .alert-danger  { background: #2a1214; border-color: #5c2026; color: #ffc9cf; }
+        .alert .btn-close { filter: invert(1) brightness(1.6); }
+
+        /* --- Barres de défilement --- */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #060c1c; }
+        ::-webkit-scrollbar-thumb { background: #23304f; border: 2px solid #060c1c; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2f3f66; }
+
+        /* --- Rideau de révélation --- */
+        #rideau { background: var(--gris-fond); }
+        #rideau .compte { color: var(--jaune); }
+
+        /* --- Impression : on repasse en clair --- */
+        @media print {
+            body { background: #fff; color: #000; }
+            .carte, .compteur, .carte-binome { background: #fff; border-color: #ccc; }
+            .texte-marine, .texte-doux, .score-gros, .compteur-valeur { color: #000; }
+        }
     </style>
     {% block styles %}{% endblock %}
 </head>
